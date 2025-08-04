@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "ES2020", // Genera código moderno
+        "module": "ES2020", // Usa ESModules (import/export)
+        "moduleResolution": "node", // Resolución de módulos estilo Node.js
+        "outDir": "./clients", // Carpeta de salida
+        "rootDir": "./clients", // Carpeta de entrada
+        "strict": true, // Activa chequeos estrictos
+        "esModuleInterop": true, // Permite importar módulos CommonJS
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "declaration": false // Si no necesitas los .d.ts
+    },
+    "include": [
+        "clients/*.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

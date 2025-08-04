@@ -1,0 +1,24 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.0.4"
+  },
+  "dependencies": {
+    "@aztec/bb.js": "0.84.0",
+    "@noir-lang/noir_js": "1.0.0-beta.8",
+    "@popperjs/core": "^2.11.8",
+    "@zkpassport/poseidon2": "^0.6.2",
+    "algosdk": "^3.3.1",
+    "bootstrap": "^5.3.6",
+    "buffer": "^6.0.3",
+    "zod": "^3.25.48"
+  }
+}

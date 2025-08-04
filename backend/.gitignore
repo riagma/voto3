@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.production
+!.env.* # Permite subir todos los .env.* excepto el de producción
+
+# Build & Distribution
+# dist/
+# build/
+# frontend/dist/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temp files
+*.tmp
+*.temp
+.cache/
+.temp/
+.tmp/
+
+# Base de datos
+data/
+
+# Circuits (no subir)
+circuits/
+proofs/
+
+# Public (ignorar index.html, assets y circuits)
+public/index.html
+public/assets/
+public/circuits/
+
+# Misc
+.DS_Store

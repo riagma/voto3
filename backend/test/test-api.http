@@ -1,0 +1,150 @@
+@baseUrl = http://localhost:3000
+@tokenAdmin = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb3JyZW8iOiJyaWFnbWFAZ21haWwuY29tIiwiaXNBZG1pbiI6dHJ1ZSwiaWF0IjoxNzQ3NzU2OTM3LCJleHAiOjE3NDc3ODU3Mzd9.wI9qSPJSWkLoe6rne-3rJrktxPRlqnLPjrj5q4LIvSo
+@tokenVotante = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkbmkiOiIzNzc1MTIwNFEiLCJ0aXBvIjoidm90YW50ZSIsImlhdCI6MTc0OTA2MTU4MiwiZXhwIjoxNzQ5MDY1MTgyfQ.StMk2mw4f3SVOqdHYnMthRzbWWK0_rJxYMkj28XwkmI
+
+##------------------------------------------------------------------------------
+
+### Listar elecciones disponibles
+GET {{baseUrl}}/api/algorand/config
+
+##------------------------------------------------------------------------------
+
+### Obtener datos votante (Votante)
+GET {{baseUrl}}/api/votante
+Authorization: Basic OTAwMDAwMDBaOlBhc3N3b3JkMTIzIQ==
+
+### Obtener registro de elección (Votante)
+GET {{baseUrl}}/api/registro/1
+Authorization: Basic OTAwMDAwMDBaOlBhc3N3b3JkMTIzIQ==
+
+##------------------------------------------------------------------------------
+
+### Listar elecciones disponibles
+GET {{baseUrl}}/api/eleccion/disponibles
+
+### Detalle elección 1
+GET {{baseUrl}}/api/eleccion/1
+
+### Partidos elección 1
+GET {{baseUrl}}/api/eleccion/1/partidos
+
+### Contrato elección 1
+GET {{baseUrl}}/api/eleccion/1/contrato
+
+### PruebaZK elección 1
+GET {{baseUrl}}/api/eleccion/1/pruebaZK
+
+### RaizZK elección 1 bloque 0
+GET {{baseUrl}}/api/eleccion/1/raizZK/0
+
+### Resultados elección 1
+GET {{baseUrl}}/api/eleccion/1/resultados
+
+##------------------------------------------------------------------------------
+
+### Registrar solicitud 2
+PUT {{baseUrl}}/api/papeleta/2/registrar
+Content-Type: application/json
+
+{
+  "kk": "Password123!"
+}
+
+
+##------------------------------------------------------------------------------
+##------------------------------------------------------------------------------
+
+### LOGIN de votante
+POST {{baseUrl}}/api/login/votante
+Content-Type: application/json
+
+{
+  "dni": "37751204Q",
+  "contrasena": "Password123!"
+}
+
+### Listar elecciones disponibles (Votante)
+GET {{baseUrl}}/api/votante/eleccion
+Authorization: Bearer {{tokenVotante}}
+
+### Obtener elección (Votante)
+GET {{baseUrl}}/api/votante/eleccion/3
+Authorization: Bearer {{tokenVotante}}
+
+### Obtener partidos de elección (Votante)
+GET {{baseUrl}}/api/votante/eleccion/3/partidos
+Authorization: Bearer {{tokenVotante}}
+
+### Obtener resultados de elección (Votante)
+GET {{baseUrl}}/api/votante/eleccion/3/resultados
+Authorization: Bearer {{tokenVotante}}
+
+### Crear registro de elección (Votante)
+POST {{baseUrl}}/api/votante/eleccion/3/registro
+Authorization: Bearer {{tokenVotante}}
+Content-Type: application/json
+
+{
+  "compromiso": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+  "datosPrivados": "Información sensible del votante"
+}
+
+### Eliminar registro de elección (Votante)
+DELETE {{baseUrl}}/api/votante/eleccion/3/registro
+Authorization: Bearer {{tokenVotante}}
+
+##------------------------------------------------------------------------------
+
+### LOGIN de administrador
+POST {{baseUrl}}/api/login/admin
+Content-Type: application/json
+
+{
+  "correo": "riagma@gmail.com",
+  "contrasena": "1234123412341234"
+}
+
+### Obtener perfil del votante
+GET {{baseUrl}}/api/votante/perfil
+Authorization: Bearer {{tokenVotante}}
+
+### Obtener perfil del administrador
+GET {{baseUrl}}/api/admin/perfil
+Authorization: Bearer {{tokenAdmin}}
+
+### Listar elecciones (Admin)
+GET {{baseUrl}}/api/admin/elecciones
+Authorization: Bearer {{tokenAdmin}}
+
+### Crear elección (Admin)
+POST {{baseUrl}}/api/admin/elecciones
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "nombre": "Elección de prueba",
+  "descripcion": "Descripción de la elección",
+  "fechaInicioRegistro": "2024-05-01T00:00:00Z",
+  "fechaFinRegistro": "2024-05-15T00:00:00Z",
+  "fechaInicioVotacion": "2024-05-16T00:00:00Z",
+  "fechaFinVotacion": "2024-05-17T00:00:00Z",
+  "fechaEscrutinio": "2024-05-18T00:00:00Z",
+  "estado": "PENDIENTE"
+}
+
+### Actualizar elección (Admin)
+PUT {{baseUrl}}/api/admin/elecciones/1
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "estado": "REGISTRO"
+}
+
+### Eliminar elección (Admin)
+DELETE {{baseUrl}}/api/admin/elecciones/1
+Authorization: Bearer {{tokenAdmin}}
+
+### Ver detalle de elección (Votante)
+GET {{baseUrl}}/api/votante/eleccion/1
+Authorization: Bearer {{tokenVotante}}
