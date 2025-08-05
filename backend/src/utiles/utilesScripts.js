@@ -14,3 +14,17 @@ export async function preguntarUsuario(pregunta) {
     });
 }
 
+export async function leerEntradaConsola(pregunta) {
+    const rl = createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    return new Promise(resolver => {
+        rl.question(pregunta, (respuesta) => {
+            rl.close();
+            resolver(respuesta);
+        });
+    });
+}
+

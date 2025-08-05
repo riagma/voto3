@@ -1,9 +1,6 @@
-import { he } from '@faker-js/faker';
 import { 
-  calcularPoseidonCircom, 
-  calcularPoseidonLite,
-  calcularPoseidon2ZkPassport,
-  calcularPoseidon2Noir, 
+  calcularPoseidon2ZkpSync, 
+  calcularPoseidon2ZkpAsync,
   hexStr2BigInt, 
   bigInt2HexStr } from '../../utiles/utilesCrypto.js';
 
@@ -15,12 +12,9 @@ const inputs = [val1, val2];
 console.log("Inputs:", inputs.map(bigInt2HexStr));
 console.log("Inputs:", inputs.map(x => x.toString()));
 
-const ccomPoseidon2 = calcularPoseidonCircom(inputs);
-console.log("Ccom Poseidon2:", typeof ccomPoseidon2, bigInt2HexStr(ccomPoseidon2), ccomPoseidon2.toString());
+const poseidon2ZkpSync = calcularPoseidon2ZkpSync(inputs);
+console.log("poseidon2ZkpSync:", typeof poseidon2ZkpSync, bigInt2HexStr(poseidon2ZkpSync), poseidon2ZkpSync.toString());
 
-const zkpaPoseidon2 = await calcularPoseidon2ZkPassport(inputs);
-console.log("Zkpa Poseidon2:", typeof zkpaPoseidon2, bigInt2HexStr(zkpaPoseidon2), zkpaPoseidon2.toString());
-
-const noirPoseidon2 = await calcularPoseidon2Noir(inputs);
-console.log("Noir Poseidon2:", typeof noirPoseidon2, bigInt2HexStr(noirPoseidon2), noirPoseidon2.toString());
+const poseidon2ZkpAsync = await calcularPoseidon2ZkpAsync(inputs);
+console.log("poseidon2ZkpAsync:", typeof poseidon2ZkpAsync, bigInt2HexStr(poseidon2ZkpAsync), poseidon2ZkpAsync.toString());
 

@@ -1,5 +1,9 @@
 import { serviciosElecciones } from '../servicios/serviciosElecciones.js';
-import { serviciosContratos, serviciosPruebas, serviciosRaices } from '../servicios/serviciosContratos.js';
+import { 
+  serviciosContratos, 
+  serviciosCuentas,
+  serviciosPruebas, 
+  serviciosRaices } from '../servicios/serviciosContratos.js';
 import { serviciosPartidos } from '../servicios/serviciosPartidos.js';
 import { serviciosResultados } from '../servicios/serviciosResultados.js';
 import { serviciosRegistros } from '../servicios/serviciosRegistros.js';
@@ -59,6 +63,14 @@ export const controladorEleccion = {
       if (!contrato) {
         return respuesta.status(404).json({ error: 'Contrato no encontrado' });
       }
+      const cuenta = serviciosCuentas.obtenerPorId(
+        peticion.bd,
+        contrato.cuentaId
+      );
+      if (!cuenta) {
+        return respuesta.status(404).json({ error: 'Cuenta no encontrada' });
+      }
+      contrato.accAddr = cuenta.accAddr;
       respuesta.json(contrato);
     } catch (error) {
       respuesta.status(500).json({ error: error.message });

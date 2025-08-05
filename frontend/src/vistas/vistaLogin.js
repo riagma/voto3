@@ -1,7 +1,6 @@
 import { servicioLogin } from '../servicios/servicioLogin.js';
 import { navegarA } from '../rutas/enrutado.js';
 import { limpiarManejadores } from '../utiles/utilesVistas.js';
-import { notificarAccesoIdentificado, wrapAccesoIdentificado } from '../componentes/accesoServidor.js';
 
 export function vistaLogin(container) {
   let manejadores = new Set();
@@ -20,6 +19,19 @@ export function vistaLogin(container) {
                 </button>
               </div>
               ${modoRegistro ? `
+                <div class="alert alert-warning mb-3" role="alert">
+                  <div class="d-flex">
+                    <i class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0" style="color: #856404;"></i>
+                    <div class="small">
+                      <strong>Importante:</strong>
+                      <ul class="mb-0 mt-1">
+                        <li>Use credenciales <strong>diferentes</strong> a las del censo electoral</li>
+                        <li>Si se registra en una elección, <strong>recuerde bien</strong> este usuario y contraseña</li>
+                        <li>Si los olvida, <strong>no podrá votar</strong> - no hay recuperación posible</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
                 <form id="formRegistro">
                   <div class="form-group mb-3">
                     <input name="nombreUsuario" type="text" class="form-control" placeholder="Nombre de usuario único" required />

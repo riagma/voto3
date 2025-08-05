@@ -263,6 +263,11 @@ export function cargarArbolDeFichero(rutaFichero) {
 export async function guardarProofEnFichero(proof, nombreFichero) {
   try {
     const rutaFichero = path.join(__dirname, '../../', PROOFS_DIR, nombreFichero);
+    const directorio = path.dirname(rutaFichero);
+    
+    // Crear el directorio si no existe
+    await fsp.mkdir(directorio, { recursive: true });
+    
     await fsp.writeFile(rutaFichero, proof);
     console.log(`Proof guardado en ${rutaFichero}`);
   } catch (error) {

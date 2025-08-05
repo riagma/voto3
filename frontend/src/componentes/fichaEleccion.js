@@ -2,7 +2,6 @@ import { limpiarManejadores } from '../utiles/utilesVistas.js';
 import { parsearFechaHora, formatearFechaWeb } from '../utiles/utilesFechas.js';
 import { ESTADO_ELECCION, ELECCION_ACTUAL } from '../utiles/constantes.js';
 
-import { servicioAlgorand } from '../servicios/servicioAlgorand.js';
 
 export function fichaEleccion(contenedor, eleccion, onAccion) {
   let manejadores = new Set();
@@ -13,11 +12,21 @@ export function fichaEleccion(contenedor, eleccion, onAccion) {
 
     const status = eleccion.estado;
 
-    const textBoton = {
-      [ESTADO_ELECCION.FUTURA]: 'Ver detalles',
-      [ESTADO_ELECCION.ACTUAL]: 'Ir a votar',
-      [ESTADO_ELECCION.PASADA]: 'Ver resultados'
-    }[status];
+    let textBoton = '';
+
+    if (status === ESTADO_ELECCION.PASADA) {
+      textBoton = 'Ver resultados';
+    } else if (status === ESTADO_ELECCION.ACTUAL) {
+      if (eleccion.actual === ELECCION_ACTUAL.REGISTRO) {
+        textBoton = 'Registrarse';
+      } else if (eleccion.actual === ELECCION_ACTUAL.VOTACION) {
+        textBoton = 'VOTAR';
+      } else if (eleccion.actual === ELECCION_ACTUAL.RECUENTO) {
+        textBoton = 'Ver resultados';
+      }
+    } else if (status === ESTADO_ELECCION.FUTURA) {
+      textBoton = 'Ver detalles';
+    }
 
     // const appId = eleccion.contrato?.appId || '';
     // const algoLink = servicioAlgorand.urlApplication(appId);

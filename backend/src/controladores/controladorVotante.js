@@ -2,7 +2,6 @@ import { serviciosElecciones } from '../servicios/serviciosElecciones.js';
 import { serviciosPartidos } from '../servicios/serviciosPartidos.js';
 import { serviciosResultados } from '../servicios/serviciosResultados.js';
 import { serviciosRegistros } from '../servicios/serviciosRegistros.js';
-import { tr } from '@faker-js/faker';
 
 export const controladorVotante = {
 
@@ -17,9 +16,6 @@ export const controladorVotante = {
     }
   },
 
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
-  
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
 

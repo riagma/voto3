@@ -1,4 +1,3 @@
-// src/deployer/deployContract.js
 import { votanteDAO, eleccionDAO, registroVotanteEleccionDAO, contratoBlockchainDAO } from '../modelo/DAOs.js';
 
 import {
@@ -34,7 +33,7 @@ export async function abrirRegistroCompromisosEleccion(bd, eleccionId) {
     const { round } = await abrirRegistroCompromisos(bd, { contratoId: eleccionId });
     contratoBlockchainDAO.actualizar(bd, { contratoId: eleccionId }, { rondaInicialCompromisos: round });
     console.log(`Registro de compromisos abierto para la elección ${eleccionId}:${contrato.appId}:${round}`);
-    eleccionDAO.actualizar(bd, { id: eleccionId }, { fechaInicioRegistro: Date.now().toLocaleString() });
+    // eleccionDAO.actualizar(bd, { id: eleccionId }, { fechaInicioRegistro: Date.now().toLocaleString() });
 
   } else if (resultadoLeerEstado === 2n) {
     console.log(`El registro de compromisos de la elección ${eleccionId} ya está abierto.`);
@@ -134,7 +133,7 @@ export async function cerrarRegistroCompromisosEleccion(bd, eleccionId) {
     const { round } = await cerrarRegistroCompromisos(bd, { contratoId: eleccionId });
     contratoBlockchainDAO.actualizar(bd, { contratoId: eleccionId }, { rondaFinalCompromisos: round });
     console.log(`Registro de compromisos cerrado para la elección ${eleccionId}:${contrato.appId}`);
-    eleccionDAO.actualizar(bd, { id: eleccionId }, { fechaFinRegistro: Date.now().toLocaleString() });
+    // eleccionDAO.actualizar(bd, { id: eleccionId }, { fechaFinRegistro: Date.now().toLocaleString() });
 
   } else if (resultadoLeerEstado === 3n) {
     console.log(`La elección ${eleccionId}:${contrato.appId} ya estaba cerrada.`);

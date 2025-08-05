@@ -1,5 +1,16 @@
 # smart_contracts/voto3/contract.py
-from algopy import ARC4Contract, UInt64, Asset, Global, Txn, itxn, String, Bytes, Account, arc4
+from algopy import (
+    ARC4Contract,
+    UInt64,
+    Asset,
+    Global,
+    Txn,
+    itxn,
+    String,
+    Bytes,
+    Account,
+    arc4,
+)
 from algopy.arc4 import abimethod
 from typing import Tuple
 
@@ -20,7 +31,7 @@ class Voto3(ARC4Contract):
     tam_resto: UInt64
 
     # TODO cambiar a txId mejor si es cadena
-    txnId_raiz: String 
+    txnId_raiz: String
 
     def __init__(self) -> None:
         super().__init__()
@@ -127,7 +138,9 @@ class Voto3(ARC4Contract):
     # --------------
 
     @abimethod()
-    def abrir_registro_raices(self, num_bloques: UInt64, tam_bloque: UInt64, tam_resto: UInt64) -> None:
+    def abrir_registro_raices(
+        self, num_bloques: UInt64, tam_bloque: UInt64, tam_resto: UInt64
+    ) -> None:
         assert (
             Txn.sender == Global.creator_address
         ), "Solo el creador puede abrir el registro de raíces"
@@ -167,8 +180,8 @@ class Voto3(ARC4Contract):
     def leer_datos_raices(self) -> Tuple[UInt64, UInt64, UInt64, String]:
         assert self.estado_contrato >= UInt64(
             5
-        ), "El contrato no está en el estado correcto"  
-        return(self.num_bloques, self.tam_bloque, self.tam_resto, self.txnId_raiz)
+        ), "El contrato no está en el estado correcto"
+        return (self.num_bloques, self.tam_bloque, self.tam_resto, self.txnId_raiz)
 
     # --------------
 
@@ -200,14 +213,16 @@ class Voto3(ARC4Contract):
         assert (
             Txn.sender == Global.creator_address
         ), "Solo el creador puede enviar papeletas"
-        assert self.estado_contrato == UInt64(6), "El contrato no está en el estado correcto"
+        assert self.estado_contrato == UInt64(
+            6
+        ), "El contrato no está en el estado correcto"
 
         itxn.AssetTransfer(
             xfer_asset=self.papeletas.id,
             asset_amount=UInt64(1),
             asset_receiver=Account(destinatario),
             sender=Global.current_application_address,
-            fee=UInt64(0)
+            fee=UInt64(0),
         ).submit()
 
         valor_actual = self.papeletas_enviadas
@@ -224,3 +239,50 @@ class Voto3(ARC4Contract):
         ), "El contrato no está en el estado correcto"
         self.estado_contrato = UInt64(7)
         return self.contador_anuladores
+
+    # --------------
+
+    @abimethod(allow_actions=["NoOp"])
+    def recuperar_papeletas(self, cuenta: Bytes) -> None:
+        assert (
+            Txn.sender == Global.creator_address
+        ), "Solo el creador puede recuperar papeletas"
+        assert self.estado_contrato == UInt64(7), "La elección no ha acabado"
+
+        itxn.AssetTransfer(
+            xfer_asset=self.papeletas.id,
+            asset_amount=UInt64(1),
+            asset_receiver=Global.current_application_address,
+            sender=Account(cuenta),
+            fee=UInt64(0),
+        ).submit()
+
+    @abimethod(allow_actions=["NoOp"])
+    def finalizar_eleccion(self) -> None:
+        assert (
+            Txn.sender == Global.creator_address
+        ), "Solo el creador puede finalizar la elección"
+        assert self.estado_contrato == UInt64(7), "La elección no ha acabado"
+
+        # Destruir el asset (papeletas)
+        itxn.AssetConfig(
+            config_asset=self.papeletas.id,
+            manager=Global.zero_address,
+            reserve=Global.zero_address,
+            freeze=Global.zero_address,
+            clawback=Global.zero_address,
+            fee=UInt64(0),
+        ).submit()
+
+        # Devolver el crédito sobrante al creador del contrato
+        saldo = Global.current_application_address.balance
+        min_balance = Global.current_application_address.min_balance
+        excedente = saldo - min_balance
+        if excedente > UInt64(0):
+            itxn.Payment(
+                receiver=Global.creator_address,
+                amount=excedente,
+                fee=UInt64(0),
+            ).submit()
+
+        self.estado_contrato = UInt64(8)

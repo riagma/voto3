@@ -3,7 +3,10 @@ import { voto3IDB as idb } from '../modelo/voto3IDB.js';
 import { servicioLogin } from '../servicios/servicioLogin.js';
 import { encriptarJSON, desencriptarJSON } from '../utiles/utilesCrypto.js';
 
-export async function notificarAccesoIdentificado(titulo = 'Acceso al servidor de Voto3') {
+export async function notificarAccesoIdentificado({
+  titulo = 'Acceso al servidor de Voto3',
+  disclaimer = 'Este acceso identificado sólo se utilizará para recuperar datos del censo al crear usuarios y para registrarse en elecciones. La solicitud de papeletas y el voto siempre serán anónimos.'
+} = {}) {
   const nombreUsuario = contexto.getNombreUsuario();
   if (!nombreUsuario) {
     throw new Error('No hay usuario autenticado');
@@ -23,12 +26,12 @@ export async function notificarAccesoIdentificado(titulo = 'Acceso al servidor d
     const modal = document.createElement('div');
     modal.className = 'modal fade'; modal.tabIndex = -1;
     modal.innerHTML = `
-      <div class="modal-dialog modal-sm" style="max-width: 400px;">
+      <div class="modal-dialog modal-sm" style="max-width: 450px;">
         <div class="modal-content">
           <div class="modal-header" style="cursor: move; padding: 1rem;">
             <div>
               <h5 class="modal-title mb-1">${titulo}</h5>
-              <small class="text-muted">Este es un disclaimer de relleno mientras se me ocurre que poner</small>
+              <small class="text-muted" style="line-height: 1.3;">${disclaimer}</small>
             </div>
           </div>
           <div class="modal-body" style="padding: 1rem;">
@@ -72,7 +75,7 @@ export async function notificarAccesoIdentificado(titulo = 'Acceso al servidor d
     btnMostrarContrasena.addEventListener('click', () => {
       const tipo = passInput.type === 'password' ? 'text' : 'password';
       passInput.type = tipo;
-      btnMostrarContrasena.innerHTML = `<i class="bi bi-eye${tipo==='password'?'':'-slash'}"></i>`;
+      btnMostrarContrasena.innerHTML = `<i class="bi bi-eye${tipo === 'password' ? '' : '-slash'}"></i>`;
     });
 
     // Hacer el modal movible (solo en pantallas grandes)
@@ -105,14 +108,14 @@ export async function notificarAccesoIdentificado(titulo = 'Acceso al servidor d
           e.preventDefault();
           currentX = e.clientX - initialX;
           currentY = e.clientY - initialY;
-          
+
           // Limitar el movimiento para que no se salga de la pantalla
           const maxX = window.innerWidth - modalDialog.offsetWidth;
           const maxY = window.innerHeight - modalDialog.offsetHeight;
-          
+
           currentX = Math.max(0, Math.min(currentX, maxX));
           currentY = Math.max(0, Math.min(currentY, maxY));
-          
+
           xOffset = currentX;
           yOffset = currentY;
           modalDialog.style.transform = `translate(${currentX}px, ${currentY}px)`;
@@ -171,13 +174,15 @@ export async function notificarAccesoIdentificado(titulo = 'Acceso al servidor d
 
 /**
  * Envuelve una llamada al servidor Voto3 para notificar acceso primero.
+ * @param {Object} opciones - Opciones del modal
+ * @param {string} opciones.titulo - Título del modal
+ * @param {string} opciones.disclaimer - Texto explicativo bajo el título
  * @param {Function} peticion - async function({dni,contrasena}, ...args)
  * @returns {Function} async wrapper(...args)
  */
-export function wrapAccesoIdentificado(titulo, peticion) {
-  return async function(...args) {
-    const credenciales = await notificarAccesoIdentificado(titulo);
-    // if (!credenciales) throw new Error('Operación cancelada por el usuario');
+export function wrapAccesoIdentificado(opciones, peticion) {
+  return async function (...args) {
+    const credenciales = await notificarAccesoIdentificado(opciones);
     return peticion(credenciales, ...args);
   }
 }

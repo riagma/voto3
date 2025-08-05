@@ -38,7 +38,11 @@ export const servicioVotante = {
       if (usuario.votante) {
         votantePlano = await desencriptarJSON(usuario.votante, servicioLogin.getClaveDerivada());
       } else {
-        const credenciales = await notificarAccesoIdentificado('Verificar datos censales');
+        const credenciales = await notificarAccesoIdentificado({
+          titulo: 'Recuperando datos del censo',
+          disclaimer: 'Para recuperar los datos del censo, necesita verificar su identidad. Siempre que haya un acceso identificado le será notificado. El voto será completamente anónimo.'
+        });
+
         if (!credenciales) {
           console.warn('Operación cancelada por el usuario');
           return null;
@@ -71,7 +75,11 @@ export const servicioVotante = {
 
   async cargarCompromiso(idEleccion) {
     try {
-      const credenciales = await notificarAccesoIdentificado('Cargar datos registro');
+      const credenciales = await notificarAccesoIdentificado({
+        titulo: 'Recuperando datos de registro',
+        disclaimer: 'Para recuperar los datos de registro en esta elección, necesita verificar su identidad. Siempre que haya un acceso identificado le será notificado. El voto será completamente anónimo.'
+      });
+
       if (!credenciales) {
         console.warn('Operación cancelada por el usuario');
         return null;
@@ -178,6 +186,7 @@ export const servicioVotante = {
           registro.contratoAppId = contrato.appId;
           registro.contratoAppAddr = contrato.appAddr;
           registro.contratoAssetId = contrato.tokenId;
+          registro.contratoAccAddr = contrato.accAddr;
         }
 
         const compromiso = await this.cargarCompromiso(idEleccion);
@@ -251,7 +260,11 @@ export const servicioVotante = {
 
   async crearCompromiso(idEleccion, compromiso, datosPrivados) {
     try {
-      const credenciales = await notificarAccesoIdentificado('Registrarse en la elección');
+      const credenciales = await notificarAccesoIdentificado({
+        titulo: 'Registrarse en elección',
+        disclaimer: 'Para registrarse en esta elección necesita verificar su identidad. Siempre que haya un acceso identificado le será notificado. El voto será completamente anónimo.'
+      });
+
       if (!credenciales) {
         console.warn('Operación cancelada por el usuario');
         return null;

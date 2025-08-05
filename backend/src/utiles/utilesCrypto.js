@@ -1,18 +1,15 @@
-// const isNode = typeof window === 'undefined';
-// const webcrypto = isNode ? (await import('node:crypto')).webcrypto : crypto;
-
 import { randomBytes, createHash, webcrypto } from 'node:crypto';
 import { Buffer } from 'node:buffer';
 
 import { poseidon2Hash, poseidon2HashAsync } from "@zkpassport/poseidon2"
-import { calcularPoseidon2Circuito } from './poseidon2.js';
+// import { calcularPoseidon2Circuito } from './poseidon2.js';
 
-import * as circomlibjs from 'circomlibjs';
-export const poseidon = await circomlibjs.buildPoseidon();
+// import * as circomlibjs from 'circomlibjs';
+// export const poseidon = await circomlibjs.buildPoseidon();
 
 //----------------------------------------------------------------------------
 
-export function calcularPoseidon2Circom(datos) {
+export function calcularPoseidon2ZkpSync(datos) {
 
   const inputs = Array.isArray(datos) ? datos : [datos];
 
@@ -27,7 +24,7 @@ export function calcularPoseidon2Circom(datos) {
 
 //----------------------------------------------------------------------------
 
-export async function calcularPoseidon2ZkPassport(datos) {
+export async function calcularPoseidon2ZkpAsync(datos) {
 
   const inputs = Array.isArray(datos) ? datos : [datos];
 
@@ -42,36 +39,36 @@ export async function calcularPoseidon2ZkPassport(datos) {
 
 //----------------------------------------------------------------------------
 
-export async function calcularPoseidon2Noir(datos) {
+// export async function calcularPoseidon2Noir(datos) {
 
-  const inputsTmp = Array.isArray(datos) ? datos : [datos];
+//   const inputsTmp = Array.isArray(datos) ? datos : [datos];
 
-  for (const x of inputsTmp) {
-    if (typeof x !== 'bigint') {
-      throw new Error('Todos los elementos de entrada deben ser BigInt');
-    }
-  }
+//   for (const x of inputsTmp) {
+//     if (typeof x !== 'bigint') {
+//       throw new Error('Todos los elementos de entrada deben ser BigInt');
+//     }
+//   }
 
-  const inputs = Array(2).fill('0');
+//   const inputs = Array(2).fill('0');
 
-  for (let i = 0; i < Math.min(inputsTmp.length, 2); i++) {
+//   for (let i = 0; i < Math.min(inputsTmp.length, 2); i++) {
     
-    inputs[i] = bigInt2HexStr(inputsTmp[i]);
-  }
+//     inputs[i] = bigInt2HexStr(inputsTmp[i]);
+//   }
 
-  console.log('calcularPoseidon2Noir inputs:', inputs);
+//   console.log('calcularPoseidon2Noir inputs:', inputs);
 
-  const hashHex = await calcularPoseidon2Circuito(inputs);
+//   const hashHex = await calcularPoseidon2Circuito(inputs);
 
-  console.log('calcularPoseidon2Noir output:', hashHex);
+//   console.log('calcularPoseidon2Noir output:', hashHex);
 
-  return hexStr2BigInt(hashHex);
-}
+//   return hexStr2BigInt(hashHex);
+// }
 
 //----------------------------------------------------------------------------
 
 export function calcularPoseidon2(datos) {
-  return calcularPoseidon2Circom(datos);
+  return calcularPoseidon2ZkpSync(datos);
 }
 
 //----------------------------------------------------------------------------

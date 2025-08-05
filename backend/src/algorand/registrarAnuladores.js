@@ -1,4 +1,7 @@
 import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { UltraHonkBackend } from '@aztec/bb.js';
 
 import { anuladorZKDAO, contratoBlockchainDAO, raizZKDAO, eleccionDAO } from '../modelo/DAOs.js';
@@ -16,7 +19,10 @@ import {
 
 //--------------
 
-const merkle11Texto = await fs.readFile(MERKLE11_JSON, 'utf8');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ficheroMerkle11 = path.join(__dirname, '../../', MERKLE11_JSON);
+
+const merkle11Texto = await fs.readFile(ficheroMerkle11, 'utf8');
 const merkle11Json = JSON.parse(merkle11Texto);
 const honk = new UltraHonkBackend(merkle11Json.bytecode, { threads: 8 });
 
@@ -29,7 +35,7 @@ export async function abrirRegistroAnuladoresEleccion(bd, eleccionId) {
   if (!eleccion) {
     throw new Error(`No se encontró la elección con ID ${eleccionId}`);
   }
-  
+
   const contrato = contratoBlockchainDAO.obtenerPorId(bd, { contratoId: eleccionId });
   if (!contrato) {
     throw new Error(`No se encontró el contrato para la elección ${eleccionId}`);
@@ -43,7 +49,7 @@ export async function abrirRegistroAnuladoresEleccion(bd, eleccionId) {
     const resultadoAbrir = await abrirRegistroAnuladores(bd, { contratoId: eleccionId });
     console.log(`Registro de anuladores abierto para la elección ${eleccionId}:${contrato.appId}`);
     contratoBlockchainDAO.actualizar(bd, { contratoId: eleccionId }, { rondaInicialAnuladores: resultadoAbrir.ronda });
-    eleccionDAO.actualizar(bd, { id: eleccionId }, { fechaInicioVotacion: Date.now().toLocaleString() });
+    // eleccionDAO.actualizar(bd, { id: eleccionId }, { fechaInicioVotacion: Date.now().toLocaleString() });
 
   } else if (resultadoLeerEstado === 6n) {
     console.log(`El registro de anuladores de la elección ${eleccionId} ya estaba abierto.`);
@@ -154,11 +160,11 @@ export async function solicitarPapeletaEleccion(bd, { eleccionId, anulador }) {
   }
 
   try {
-    const resultadoEnviar = await enviarPapeleta(bd, { 
-      contratoId: eleccionId, 
-      destinatario: registroAnulador.destinatario 
+    const resultadoEnviar = await enviarPapeleta(bd, {
+      contratoId: eleccionId,
+      destinatario: registroAnulador.destinatario
     });
-    
+
     anuladorZKDAO.actualizar(bd, { pruebaId: eleccionId, anulador }, { papeletaTxId: resultadoEnviar.txId });
 
     console.log(`Papeleta de elección ${eleccionId} enviada al destinatario ${registroAnulador.destinatario}`);
@@ -179,7 +185,7 @@ export async function cerrarRegistroAnuladoresEleccion(bd, eleccionId) {
   if (!eleccion) {
     throw new Error(`No se encontró la elección con ID ${eleccionId}`);
   }
-  
+
   const contrato = contratoBlockchainDAO.obtenerPorId(bd, { contratoId: eleccionId });
   if (!contrato) {
     throw new Error(`No se encontró el contrato para la elección ${eleccionId}`);
@@ -193,7 +199,7 @@ export async function cerrarRegistroAnuladoresEleccion(bd, eleccionId) {
     const resultadoCerrar = await cerrarRegistroAnuladores(bd, { contratoId: eleccionId });
     console.log(`Registro de anuladores cerrado para la elección ${eleccionId}:${contrato.appId}`);
     contratoBlockchainDAO.actualizar(bd, { contratoId: eleccionId }, { rondaFinalAnuladores: resultadoCerrar.ronda });
-    eleccionDAO.actualizar(bd, { id: eleccionId }, { fechaFinVotacion: Date.now().toLocaleString() });
+    // eleccionDAO.actualizar(bd, { id: eleccionId }, { fechaFinVotacion: Date.now().toLocaleString() });
 
   } else if (resultadoLeerEstado === 7n) {
     console.log(`La elección ${eleccionId}:${contrato.appId} ya estaba cerrada.`);

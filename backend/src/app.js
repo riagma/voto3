@@ -4,11 +4,15 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { PUERTO } from './utiles/constantes.js';
 import { rutasApi } from './rutas/rutasApi.js';
+import { iniciarIpfs, detenerIpfs } from './utiles/servicioIpfs.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rutaFrontend = path.join(__dirname, '../public');
 const rutaDescargas = path.join(__dirname, '../circuits');
+
+let servidor;
 
 export async function iniciarServidor() {
   const app = express();
@@ -34,14 +38,32 @@ export async function iniciarServidor() {
     respuesta.sendFile(path.join(rutaFrontend, 'index.html'));
   });
 
+  // Iniciar IPFS primero
+  await iniciarIpfs();
+  console.log('IPFS iniciado correctamente');
+
   // Iniciar servidor
   return new Promise((resolve) => {
-    app.listen(PUERTO, () => {
+    servidor = app.listen(PUERTO, () => {
       console.log(`Servidor iniciado en http://localhost:${PUERTO}`);
       resolve(app);
     });
   });
 }
+
+export async function cerrarServidor() {
+  console.log('\nCerrando servidor...');
+
+  if (servidor) {
+    servidor.close(() => {
+      console.log('Servidor HTTP cerrado');
+    });
+  }
+
+  await detenerIpfs();
+  process.exit(0);
+}
+
 
 // Ejemplo de cómo lo usarías en tu SPA
 // async function cargarFicheroCircuito(nombreFichero) {

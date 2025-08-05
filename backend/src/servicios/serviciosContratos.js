@@ -49,23 +49,41 @@ export const serviciosRaices = {
     return daos.raizZK.crear(bd, datosRaiz);
   },
 
-  // Actualizar un contrato
   actualizar(bd, pruebaId, bloqueIdx, datosRaiz) {
     return daos.raizZK.actualizar(bd, { pruebaId, bloqueIdx }, datosRaiz);
   },
 
-  // Eliminar un contrato
   eliminar(bd, pruebaId, bloqueIdx) {
     return daos.raizZK.eliminar(bd, { pruebaId, bloqueIdx });
   },
 
-  // Obtener todos los contratos
   obtenerTodos(bd) {
     return daos.raizZK.obtenerTodos(bd);
   },
 
-  // Obtener contrato por ID
   obtenerPorId(bd, pruebaId, bloqueIdx) {
     return daos.raizZK.obtenerPorId(bd, { pruebaId, bloqueIdx });
   }
+};
+
+export const serviciosCuentas = {
+  crear(bd, datosCuenta) {
+    return daos.cuentaBlockchain.crear(bd, datosCuenta);
+  },
+
+  actualizar(bd, cuentaId, datosCuenta) {
+    return daos.cuentaBlockchain.actualizar(bd, { cuentaId }, datosCuenta);
+  },
+
+  eliminar(bd, cuentaId) {
+    return daos.cuentaBlockchain.eliminar(bd, { cuentaId });
+  },
+
+  obtenerTodos(bd) {
+    return daos.cuentaBlockchain.obtenerTodos(bd);
+  },
+
+  obtenerPorId(bd, cuentaId) {
+    return daos.cuentaBlockchain.obtenerPorId(bd, { cuentaId });
+  },
 };

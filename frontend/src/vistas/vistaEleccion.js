@@ -5,7 +5,6 @@ import { servicioAlgorand } from '../servicios/servicioAlgorand.js';
 import { formatearFecha, parsearFechaHora } from '../utiles/utilesFechas.js';
 import { limpiarComponentes, limpiarManejadores } from '../utiles/utilesVistas.js';
 import { fichaPartido } from '../componentes/fichaPartido.js';
-import { componentePresentarse } from '../componentes/componentePresentarse.js';
 import { fichaRegistro } from '../componentes/fichaRegistro.js';
 import { fichaVotacion } from '../componentes/fichaVotacion.js';
 import { fichaResultados } from '../componentes/fichaResultados.js';

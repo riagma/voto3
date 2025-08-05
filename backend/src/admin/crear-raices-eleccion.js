@@ -8,6 +8,7 @@ import { abrirConexionBD, cerrarConexionBD } from '../modelo/BD.js';
 import { eleccionDAO, pruebaZKDAO, raizZKDAO, registroVotanteEleccionDAO } from '../modelo/DAOs.js';
 import { comprimirArchivo, calcularDatosArbol, construirArbolMerkle } from '../utiles/utilesArbol.js';
 import { CIRCUIT_DIR, MERKLE11_JSON } from '../utiles/constantes.js';
+import { subirArchivoRemoto, verificarEstado } from '../utiles/clienteIpfs.js';
 
 const eleccionId = process.argv[2] ? parseInt(process.argv[2]) : undefined;
 
@@ -17,6 +18,15 @@ if (!eleccionId) {
 }
 
 try {
+  // Verificar que el backend IPFS está activo
+  console.log('Verificando estado del servicio IPFS...');
+  const activo = await verificarEstado();
+
+  if (!activo) {
+    console.error('El servicio IPFS no está activo en el backend. Inicia el servidor primero.');
+    process.exit(1);
+  }
+
   const bd = abrirConexionBD();
 
   const eleccion = eleccionDAO.obtenerPorId(bd, { id: eleccionId });
@@ -67,6 +77,10 @@ try {
   const merkle11JsonDestino = path.join(dirPruebaZK, path.basename(merkle11JsonOrigen));
   fs.copyFileSync(merkle11JsonOrigen, merkle11JsonDestino);
 
+  console.log(`Subiendo ${merkle11JsonDestino} a IPFS...`);
+  const cidMerkle11Json = await subirArchivoRemoto(`${merkle11JsonDestino}`);
+  console.log(`CID de Merkle11 JSON: ${cidMerkle11Json}`);
+
   // pruebaId INTEGER PRIMARY KEY,
   // numBloques INTEGER NOT NULL,
   // tamBloque INTEGER NOT NULL,
@@ -84,14 +98,13 @@ try {
     numBloques: datosArbol.numBloques,
     txIdRaizInicial: 'TEMPORAL',
     urlCircuito: path.join(relPruebaZK, path.basename(merkle11JsonDestino)),
-    ipfsCircuito: path.basename(merkle11JsonDestino),
+    ipfsCircuito: cidMerkle11Json,
   };
 
   const resultadoPruebaZK = pruebaZKDAO.crear(bd, nuevaPruebaZK);
   console.log(`Prueba ZK creada con ID: ${resultadoPruebaZK.pruebaId}`);
 
   for (let bloque = 0, compromisoIdx = 0; bloque < datosArbol.numBloques; bloque++) {
-
     const tamBloque = (bloque < datosArbol.tamResto) ? datosArbol.tamBloque + 1 : datosArbol.tamBloque;
 
     console.log(`Procesando bloque ${bloque} con tamaño ${tamBloque} índice ${compromisoIdx}`);
@@ -104,14 +117,16 @@ try {
 
     compromisoIdx += tamBloque;
 
-    console.log(`Número de registros obtenidos: ${registros.length}:${tamBloque}`);
-
     const compromisos = registros.map(r => r.compromiso);
     const nombreFichero = `compromisos-B-${bloque}.json`;
     const archivoCompromisos = path.join(dirPruebaZK, nombreFichero);
-    console.log(`Guardando compromisos en: ${archivoCompromisos}`);
+
     fs.writeFileSync(archivoCompromisos, JSON.stringify(compromisos, null, 2), 'utf8');
     await comprimirArchivo(archivoCompromisos, `${archivoCompromisos}.gz`);
+
+    console.log(`Subiendo ${archivoCompromisos} a IPFS...`);
+    const cidCompromisos = await subirArchivoRemoto(`${archivoCompromisos}`);
+    console.log(`CID de compromisos: ${cidCompromisos}`);
 
     const arbolMerkle = construirArbolMerkle(compromisos);
 
@@ -119,13 +134,13 @@ try {
       pruebaId: eleccionId,
       bloqueIdx: bloque,
       urlCompromisos: path.join(relPruebaZK, path.basename(nombreFichero)),
-      ipfsCompromisos: path.basename(nombreFichero),
+      ipfsCompromisos: cidCompromisos, // CID real de IPFS
       raiz: arbolMerkle.raiz.toString(),
       txIdRaiz: 'TEMPORAL',
     };
 
     const resultadoRaizZK = raizZKDAO.crear(bd, nuevaRaizZK);
-    console.log(`Raíz ZK creada para el bloque ${bloque} con ID: ${JSON.stringify(resultadoRaizZK)}`);
+    console.log(`Raíz ZK creada para el bloque ${bloque} con CID: ${cidCompromisos}`);
   }
 
 } catch (err) {

@@ -1,6 +1,4 @@
-import e from 'express';
 import { BaseDAO } from './BaseDAO.js';
-import { el } from '@faker-js/faker';
 
 export class RegistroVotanteEleccionDAO extends BaseDAO {
   constructor() {

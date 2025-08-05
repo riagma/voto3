@@ -20,12 +20,8 @@ export async function configurarAlgorand() {
 
     if (
       !config ||
-      !config.algodToken ||
       !config.algodServer ||
-      !config.algodPort ||
-      !config.indexerToken ||
       !config.indexerServer ||
-      !config.indexerPort ||
       !config.explorerServer ||
       !config.explorerAccount ||
       !config.explorerAsset ||
@@ -36,14 +32,14 @@ export async function configurarAlgorand() {
 
     try {
       configurarAlgorandClient(
-        config.algodToken,
+        config.algodToken || '',
         config.algodServer,
-        config.algodPort);
+        config.algodPort || '');
 
       configurarAlgorandIndexer(
-        config.indexerToken,
+        config.indexerToken || '',
         config.indexerServer,
-        config.indexerPort);
+        config.indexerPort || '');
 
       configurarExplorador(
         config.explorerServer,
@@ -282,6 +278,87 @@ export const servicioAlgorand = {
         console.error("Detalles del error:", error.response.body ? JSON.parse(error.response.body) : error.response);
       }
       throw new Error(`Error al emitir el voto: ${error.message}`);
+    }
+  },
+
+  //----------------------------------------------------------------------------
+
+  async destruirCuenta(mnemonico, assetId, creadorAddr) {
+    try {
+      const cuenta = algosdk.mnemonicToSecretKey(mnemonico);
+      if (!cuenta || !cuenta.addr || !cuenta.sk) {
+        throw new Error("Cuenta inválida o mnemonico incorrecto.");
+      }
+
+      console.log(`Destruyendo cuenta ${cuenta.addr}...`);
+
+      // 1. Verificar que la cuenta tiene el asset y obtener la cantidad
+      const cuentaInfo = await algod.accountInformation(cuenta.addr).do();
+      const assetIdBigInt = BigInt(assetId);
+      const assetEncontrado = cuentaInfo.assets.find(a => a.assetId === assetIdBigInt);
+
+      if (!assetEncontrado) {
+        console.log("La cuenta no tiene el asset, procediendo a cerrar solo la cuenta.");
+      }
+
+      const params = await algod.getTransactionParams().do();
+
+      // 2. Hacer opt-out del asset si lo tiene
+      if (assetEncontrado) {
+        console.log(`Haciendo opt-out del asset ${assetId}...`);
+        
+        const optOutTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+          sender: cuenta.addr,
+          receiver: creadorAddr,
+          amount: assetEncontrado.amount, // Devolver todo el balance del asset
+          assetIndex: Number(assetId),
+          closeRemainderTo: creadorAddr, // Cerrar el asset hacia el creador
+          suggestedParams: params,
+        });
+
+        const signedOptOutTxn = optOutTxn.signTxn(cuenta.sk);
+        const respOptOut = await algod.sendRawTransaction(signedOptOutTxn).do();
+        const optOutTxId = respOptOut.txId || respOptOut.txid || "null";
+        console.log("Opt-out txId:", optOutTxId);
+
+        await algosdk.waitForConfirmation(algod, optOutTxId, 4);
+        console.log("Opt-out completado exitosamente");
+      }
+
+      // 3. Cerrar la cuenta y devolver todo el ALGO al creador
+      console.log(`Cerrando cuenta y devolviendo ALGO a ${creadorAddr}...`);
+      
+      const closeParams = await algod.getTransactionParams().do();
+      
+      const closeTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        sender: cuenta.addr,
+        receiver: creadorAddr,
+        amount: 0, // Amount 0 para cerrar cuenta
+        closeRemainderTo: creadorAddr, // Enviar todo el balance restante al creador
+        suggestedParams: closeParams,
+      });
+
+      const signedCloseTxn = closeTxn.signTxn(cuenta.sk);
+      const respClose = await algod.sendRawTransaction(signedCloseTxn).do();
+      const closeTxId = respClose.txId || respClose.txid || "null";
+      console.log("Cierre de cuenta txId:", closeTxId);
+
+      await algosdk.waitForConfirmation(algod, closeTxId, 4);
+      console.log("Cuenta cerrada exitosamente");
+
+      return {
+        optOutTxId: assetEncontrado ? (respOptOut.txId || respOptOut.txid) : null,
+        closeTxId: respClose.txId || respClose.txid,
+        cuentaAddr: cuenta.addr,
+        date: new Date()
+      };
+
+    } catch (error) {
+      console.error("Error al destruir la cuenta:", error);
+      if (error.response) {
+        console.error("Detalles del error:", error.response.body ? JSON.parse(error.response.body) : error.response);
+      }
+      throw new Error(`Error al destruir la cuenta: ${error.message}`);
     }
   },
 

@@ -1,7 +1,7 @@
 // permite “presentarse” si no se ha hecho aún
 import { servicioEleccion } from '../servicios/servicioEleccion.js';
 
-export function componentePresentarse(contenedor, idEleccion, usuario) {
+export function fichaPresentarse(contenedor, idEleccion, usuario) {
   let manejadores = new Set();
 
   async function render() {
