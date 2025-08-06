@@ -7,7 +7,7 @@ export function fichaResultados(contenedor, resultados) {
   function render() {
     limpiarManejadores(manejadores);
 
-    if (!resultados) {
+    if (!resultados || Object.keys(resultados).length === 0) {
       contenedor.innerHTML = `<div class="alert alert-secondary">No hay resultados para esta elección</div>`;
       return;
     }

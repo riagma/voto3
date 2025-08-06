@@ -13,25 +13,39 @@ export function fichaRegistro(contenedor, eleccion, registro, actualizarRegistro
     let innerHTML = '';
 
     if (eleccion.estado === ESTADO_ELECCION.FUTURA) {
-      innerHTML += `<div class="alert alert-secondary">El periodo de registro todavía no se ha abierto.</div>`;
+      innerHTML += `<div class="alert alert-secondary">
+        <i class="bi bi-clock me-2"></i>El periodo de registro todavía no se ha abierto.
+      </div>`;
 
     } else if (eleccion.estado === ESTADO_ELECCION.PASADA) {
       if (regFicha.compromiso) {
-        innerHTML += `<div class="alert alert-info">Se registró para la votación en esta elección el ${regFicha.compromisoFecha}.</div>`;
+        innerHTML += `<div class="alert alert-info">
+          <i class="bi bi-check-circle-fill me-2"></i>Se registró para la votación el ${regFicha.compromisoFecha}.
+        </div>`;
       } else {
-        innerHTML += `<div class="alert alert-secondary">No se registró para la votación en esta elección.</div>`;
+        innerHTML += `<div class="alert alert-secondary">
+          <i class="bi bi-x-circle me-2"></i>No se registró para la votación en esta elección.
+        </div>`;
       }
     } else if (eleccion.actual === ELECCION_ACTUAL.REGISTRO) {
       if (regFicha.compromiso) {
-        innerHTML += `<div class="alert alert-info">Se ha registrado para la votación en esta elección el ${regFicha.compromisoFecha}.</div>`;
+        innerHTML += `<div class="alert alert-success">
+          <i class="bi bi-check-circle-fill me-2"></i>Se ha registrado para la votación el ${regFicha.compromisoFecha}.
+        </div>`;
       } else {
-        innerHTML += `<div class="alert alert-info">Puede registrarse para la votación en esta elección.</div>`;
+        innerHTML += `<div class="alert alert-info">
+          <i class="bi bi-info-circle-fill me-2"></i>Puede registrarse para la votación en esta elección.
+        </div>`;
       }
     } else {
       if (regFicha.compromiso) {
-        innerHTML += `<div class="alert alert-info">Se ha registrado para la votación en esta elección el ${regFicha.compromisoFecha}.</div>`;
+        innerHTML += `<div class="alert alert-info">
+          <i class="bi bi-check-circle-fill me-2"></i>Se ha registrado para la votación el ${regFicha.compromisoFecha}.
+        </div>`;
       } else {
-        innerHTML += `<div class="alert alert-secondary">No se ha registrado para la votación en esta elección.</div>`;
+        innerHTML += `<div class="alert alert-secondary">
+          <i class="bi bi-x-circle me-2"></i>No se ha registrado para la votación en esta elección.
+        </div>`;
       }
     }
 
@@ -40,24 +54,38 @@ export function fichaRegistro(contenedor, eleccion, registro, actualizarRegistro
       const compromisoTxId = servicioAlgorand.urlTransaction(regFicha.compromisoTxId);
 
       innerHTML += `
-        <ul class="list-unstyled">
-          <li class="d-flex flex-wrap align-items-center gap-2">
-            <div class="d-flex align-items-center">
-              <strong>Cuenta Blockchain:</strong>
-              <a href="${compromisoAddr}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary ms-2">Ver</a>
+        <div class="card border-success bg-success bg-opacity-10 mt-3">
+          <div class="card-body p-3">
+            <h6 class="card-title text-success mb-3">
+              <i class="bi bi-shield-check me-2"></i>Verificación Blockchain
+            </h6>
+            <div class="d-flex flex-wrap gap-3">
+              <div class="d-flex align-items-center">
+                <strong class="me-2">Cuenta:</strong>
+                <a href="${compromisoAddr}" target="_blank" rel="noopener noreferrer" 
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-box-arrow-up-right me-1"></i>Ver
+                </a>
+              </div>
+              <div class="d-flex align-items-center">
+                <strong class="me-2">Compromiso:</strong>
+                <a href="${compromisoTxId}" target="_blank" rel="noopener noreferrer" 
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-box-arrow-up-right me-1"></i>Ver
+                </a>
+              </div>
             </div>
-            <span class="mx-2 d-none d-md-inline">|</span>
-            <div class="d-flex align-items-center">
-              <strong>Compromiso Registrado:</strong>
-              <a href="${compromisoTxId}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary ms-2">Ver</a>
-            </div>
-          </li>
-        </ul>`;
+          </div>
+        </div>`;
     }
-    // <li><strong>Fecha de registro:</strong> ${registro.compromisoFecha}</li>
 
     if (eleccion.actual === ELECCION_ACTUAL.REGISTRO && !regFicha.compromiso) {
-      innerHTML += `<button id="btnRegistrar" class="btn btn-outline-primary">Registrarse</button>`;
+      innerHTML += `
+        <div class="mt-3">
+          <button id="btnRegistrar" class="btn btn-primary">
+            <i class="bi bi-person-plus me-2"></i>Registrarse para votar
+          </button>
+        </div>`;
     }
 
     contenedor.innerHTML = innerHTML;
@@ -66,9 +94,19 @@ export function fichaRegistro(contenedor, eleccion, registro, actualizarRegistro
       const btn = contenedor.querySelector('#btnRegistrar');
       const handler = async () => {
         try {
+          // Mostrar modal de confirmación similar al de votación
+          const confirmacion = await mostrarConfirmacionRegistro();
+          
+          if (!confirmacion) {
+            return; // Usuario canceló
+          }
+
           regFicha = await servicioVotante.registrarVotanteEleccion(eleccion.id);
           actualizarRegistro(regFicha);
-          alert('Registro exitoso.');
+          
+          // Modal de éxito
+          mostrarExitoRegistro();
+          
         } catch (error) {
           alert('Error al registrar: ' + (error?.message || error));
         } finally {
@@ -78,6 +116,102 @@ export function fichaRegistro(contenedor, eleccion, registro, actualizarRegistro
       btn.addEventListener('click', handler);
       manejadores.add([btn, 'click', handler]);
     }
+  }
+
+  function mostrarConfirmacionRegistro() {
+    return new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.className = 'modal fade';
+      modal.tabIndex = -1;
+      modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white border-0 p-3">
+              <div class="d-flex align-items-center w-100">
+                <i class="bi bi-person-plus-fill me-2 flex-shrink-0" style="font-size: 1.25rem;"></i>
+                <div class="flex-grow-1">
+                  <h6 class="modal-title mb-0 fw-bold">Confirmar Registro</h6>
+                  <small class="opacity-75 d-block">Se creará una cuenta temporal</small>
+                </div>
+              </div>
+            </div>
+            <div class="modal-body p-3 text-center">
+              <div class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 mb-3 py-2">
+                <div class="fw-bold text-primary">${eleccion.nombre}</div>
+                <small class="text-muted">Registro de votante</small>
+              </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-3 px-3">
+              <div class="d-grid gap-2 w-100">
+                <div class="row g-2">
+                  <div class="col-6">
+                    <button type="button" class="btn btn-outline-secondary w-100 btn-sm" id="cancelarRegistro">
+                      <i class="bi bi-x-circle me-1 d-none d-md-inline"></i>Cancelar
+                    </button>
+                  </div>
+                  <div class="col-6">
+                    <button type="button" class="btn btn-primary w-100 btn-sm" id="confirmarRegistro">
+                      <i class="bi bi-check-circle me-1 d-none d-md-inline"></i>Confirmar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+      
+      const bsModal = new bootstrap.Modal(modal, {
+        backdrop: 'static',
+        keyboard: false
+      });
+
+      const btnCancelar = modal.querySelector('#cancelarRegistro');
+      const btnConfirmar = modal.querySelector('#confirmarRegistro');
+
+      btnCancelar.addEventListener('click', () => {
+        bsModal.hide();
+        resolve(false);
+      });
+
+      btnConfirmar.addEventListener('click', () => {
+        bsModal.hide();
+        resolve(true);
+      });
+
+      modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+      });
+
+      bsModal.show();
+    });
+  }
+
+  function mostrarExitoRegistro() {
+    const modalExito = document.createElement('div');
+    modalExito.className = 'modal fade';
+    modalExito.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-body text-center p-3">
+            <div class="text-success mb-2">
+              <i class="bi bi-check-circle-fill" style="font-size: 2rem;"></i>
+            </div>
+            <h6 class="text-success mb-2 fw-bold">¡Registro Exitoso!</h6>
+            <p class="mb-3 small">Se ha registrado correctamente para esta elección.</p>
+            <button type="button" class="btn btn-success btn-sm px-4" data-bs-dismiss="modal">Continuar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalExito);
+    const bsModalExito = new bootstrap.Modal(modalExito);
+    modalExito.addEventListener('hidden.bs.modal', () => {
+      document.body.removeChild(modalExito);
+    });
+    bsModalExito.show();
   }
 
   render();

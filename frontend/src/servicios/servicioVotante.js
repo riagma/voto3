@@ -7,7 +7,7 @@ import { servicioLogin } from '../servicios/servicioLogin.js';
 import { voto3IDB as idb } from '../modelo/voto3IDB.js';
 import { calcularBloqueIndice } from '../utiles/utilesArbol.js';
 import { servicioEleccion } from './servicioEleccion.js';
-import { CLAVE_PRUEBAS } from '../utiles/constantes.js';
+import { CLAVE_PRUEBAS, ESTADO_ELECCION } from '../utiles/constantes.js';
 import { formatearFechaWeb } from '../utiles/utilesFechas.js';
 import { calcularPruebaDatosPublicos } from '../utiles/utilesArbol.js';
 import { mostrarSpinnerOverlay, ocultarSpinnerOverlay } from '../componentes/SpinnerOverlay.js';
@@ -21,7 +21,6 @@ import {
   desencriptarJSON,
   desencriptarNodeJSON
 } from '../utiles/utilesCrypto.js';
-import { fi, id } from 'zod/v4/locales';
 
 
 export const servicioVotante = {
@@ -210,7 +209,7 @@ export const servicioVotante = {
           if (datosCompromiso) {
             registro.compromisoAddr = datosCompromiso.cuentaAddr;
             mnemonico = datosCompromiso.mnemonico;
-          }
+          } else { registro.compromisoAddr = null; }
         }
 
         if (registro.compromisoIdx != null) {
@@ -243,6 +242,17 @@ export const servicioVotante = {
             registro.votoTxId = votoEleccion.txIdVoto;
             registro.votoNota = votoEleccion.notaVoto;
           }
+        }
+
+        if (registro.compromisoAddr != null &&
+          (eleccion.estado === ESTADO_ELECCION.PASADA ||
+            eleccion.estado === ESTADO_ELECCION.ACTUAL && registro.votoTxId !== null)) {
+          await servicioAlgorand.destruirCuenta(
+            mnemonico,
+            registro.contratoAssetId,
+            registro.contratoAppAddr,
+            registro.contratoAccAddr
+          );
         }
 
         await idb.actualizarRegistro(contexto.getNombreUsuario(), idEleccion, registro);
@@ -496,8 +506,8 @@ export const servicioVotante = {
 
       const respVotar = await servicioAlgorand.votar(
         datosCompromiso.mnemonico,
-        registro.contratoAppAddr,
         registro.contratoAssetId,
+        registro.contratoAppAddr,
         voto
       );
 
@@ -508,6 +518,15 @@ export const servicioVotante = {
       registro.votoNota = respVotar.txId ? votoEnc : null;
 
       await idb.actualizarRegistro(contexto.getNombreUsuario(), idEleccion, registro);
+
+      const respDestruir = await servicioAlgorand.destruirCuenta(
+        datosCompromiso.mnemonico,
+        registro.contratoAssetId,
+        registro.contratoAppAddr,
+        registro.contratoAccAddr
+      );
+
+      console.log("Cuenta destruida con txID:\n", respDestruir);
 
       return registro;
 

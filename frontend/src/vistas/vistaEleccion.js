@@ -17,15 +17,20 @@ export function vistaEleccion(container, idEleccion) {
   const componentes = new Set();
   const manejadores = new Set();
 
-  // 1) Esqueleto base
+  // 1) Esqueleto base con contenedor limitado
   container.innerHTML = `
     <div class="container py-4">
-      <button id="btnVolver" class="btn btn-link mb-3">&larr; Volver</button>
-      <div id="electionHeader"></div>
-      <ul class="nav nav-tabs" id="detalleTabs" role="tablist"></ul>
-      <div class="tab-content mt-3" id="detallePanes"></div>
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+          <button id="btnVolver" class="btn btn-link mb-3">&larr; Volver</button>
+          <div id="electionHeader"></div>
+          <ul class="nav nav-tabs" id="detalleTabs" role="tablist"></ul>
+          <div class="tab-content mt-3" id="detallePanes"></div>
+        </div>
+      </div>
     </div>
   `;
+  
   // Volver
   const btnVolver = container.querySelector('#btnVolver');
   btnVolver.addEventListener('click', () => navegarA('/p'));
@@ -45,23 +50,42 @@ export function vistaEleccion(container, idEleccion) {
       }
 
     } catch (err) {
-      container.innerHTML = `<div class="alert alert-danger">Error al cargar datos elección: ${err.message}</div>`;
+      container.innerHTML = `
+        <div class="container py-4">
+          <div class="row justify-content-center">
+            <div class="col-12 col-lg-10 col-xl-8">
+              <div class="alert alert-danger">Error al cargar datos elección: ${err.message}</div>
+            </div>
+          </div>
+        </div>`;
       return () => { };
     }
 
     if (!eleccion) {
-      container.innerHTML = `<div class="alert alert-warning">Elección no encontrada</div>`;
+      container.innerHTML = `
+        <div class="container py-4">
+          <div class="row justify-content-center">
+            <div class="col-12 col-lg-10 col-xl-8">
+              <div class="alert alert-warning">Elección no encontrada</div>
+            </div>
+          </div>
+        </div>`;
       return () => { };
     }
 
     try {
-
       if (eleccion.estado !== ESTADO_ELECCION.FUTURA) {
         registro = await servicioVotante.cargarRegistroEleccion(idEleccion, eleccion, contrato);
       }
-
     } catch (err) {
-      container.innerHTML = `<div class="alert alert-danger">Error al cargar el registro de elección: ${err.message}</div>`;
+      container.innerHTML = `
+        <div class="container py-4">
+          <div class="row justify-content-center">
+            <div class="col-12 col-lg-10 col-xl-8">
+              <div class="alert alert-danger">Error al cargar el registro de elección: ${err.message}</div>
+            </div>
+          </div>
+        </div>`;
       return () => { };
     }
 
@@ -75,8 +99,6 @@ export function vistaEleccion(container, idEleccion) {
 
   function actualizarRegistro(nuevoRegistro) {
     registro = nuevoRegistro;
-    // if (destruida) return;
-    // renderizar();
   }
 
   function renderizar() {
@@ -93,57 +115,103 @@ export function vistaEleccion(container, idEleccion) {
     const appId = contrato?.appId || '';
     const linkAlgo = servicioAlgorand.urlApplication(appId);
 
-    // 3) Header con info básica
+    // 3) Header con info básica mejorado
     const hdr = container.querySelector('#electionHeader');
     hdr.innerHTML = `
-      <h2>${eleccion.nombre}</h2>
-      <p>${eleccion.descripcion}</p>
-      <ul class="list-unstyled small">
-        <li><strong>Registro:</strong> ${inicioReg} – ${finReg}</li>
-        <li><strong>Votación:</strong> ${inicioVot} – ${finVot}</li>
-        <li><strong>Escrutinio:</strong> ${escru}</li>
-        <li><strong>Blockchain:</strong> 
-          <a href="${linkAlgo}" target="_blank">${appId}</a>
-        </li>
-      </ul>
+      <div class="card border-0 bg-light mb-4">
+        <div class="card-body">
+          <h2 class="card-title mb-3">${eleccion.nombre}</h2>
+          <p class="card-text text-muted mb-3">${eleccion.descripcion}</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="d-flex flex-column gap-2 small">
+                <div><strong>Registro:</strong> ${inicioReg} – ${finReg}</div>
+                <div><strong>Votación:</strong> ${inicioVot} – ${finVot}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex flex-column gap-2 small">
+                <div><strong>Escrutinio:</strong> ${escru}</div>
+                <div><strong>Blockchain:</strong> 
+                  <a href="${linkAlgo}" target="_blank" class="text-decoration-none">
+                    ${appId} <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
 
     // 4) Construcción dinámica de pestañas
     const tabs = [];
     const panes = [];
-    // Siempre: Información
-    tabs.push({ id: 'info', label: 'Información', active: true });
-    panes.push({ id: 'info', contenedor: document.createElement('div') });
 
-    // Futuras → “Presentarse”
-    if (eleccion.estado === ESTADO_ELECCION.FUTURA && contexto.estaIdentificado()) {
-      tabs.push({ id: 'presentarse', label: 'Presentarse' });
-      panes.push({ id: 'presentarse', contenedor: document.createElement('div') });
+    let infoActivo = false;
+    let registroActivo = false;
+    let votacionActivo = false;
+    let resultadosActivo = false;
+    let presentarseActivo = false;
+
+    let infoVisible = false;
+    let votacionVisible = false;
+    let registroVisible = false;
+    let resultadosVisible = false;
+    let presentarseVisible = false;
+
+    if (eleccion.estado === ESTADO_ELECCION.FUTURA) {
+      infoVisible = true;
+      presentarseVisible = contexto.estaIdentificado();
+      infoActivo = true;
     }
-    // En curso → Registro y/o Votación
     if (eleccion.estado === ESTADO_ELECCION.ACTUAL) {
-      // if (ahora < parsearFechaHora(eleccion.fechaFinRegistro)) {
-        tabs.push({ id: 'registro', label: 'Registro' });
-        panes.push({ id: 'registro', contenedor: document.createElement('div') });
-      // }
-      // if (ahora < parsearFechaHora(eleccion.fechaEscrutinio)) {
-        tabs.push({ id: 'votacion', label: 'Votación' });
-        panes.push({ id: 'votacion', contenedor: document.createElement('div') });
-      // }
+      infoVisible = true;
+      registroVisible = true;
+      votacionVisible = true;
+      registroActivo = eleccion.actual === ELECCION_ACTUAL.REGISTRO;
+      votacionActivo = eleccion.actual === ELECCION_ACTUAL.VOTACION;
+      infoActivo = !registroActivo && !votacionActivo;
     }
-    // Pasadas → siempre Resultados (y mostrar registro/voto históricos)
     if (eleccion.estado === ESTADO_ELECCION.PASADA) {
-      tabs.push({ id: 'registro', label: 'Registro' });
+      registroVisible = true;
+      votacionVisible = true;
+      resultadosVisible = true;
+      resultadosActivo = true;
+    }
+
+    if (infoVisible) {
+      tabs.push({ id: 'info', label: 'Información', active: infoActivo });
+      panes.push({ id: 'info', contenedor: document.createElement('div') });
+    }
+    if (registroVisible) {
+      tabs.push({ id: 'registro', label: 'Registro', active: registroActivo });
       panes.push({ id: 'registro', contenedor: document.createElement('div') });
-      tabs.push({ id: 'votacion', label: 'Votación' });
+    }
+    if (votacionVisible) {
+      tabs.push({ id: 'votacion', label: 'Votación', active: votacionActivo });
       panes.push({ id: 'votacion', contenedor: document.createElement('div') });
-      tabs.push({ id: 'resultados', label: 'Resultados' });
+    }
+    if (resultadosVisible) {
+      tabs.push({ id: 'resultados', label: 'Resultados', active: resultadosActivo });
       panes.push({ id: 'resultados', contenedor: document.createElement('div') });
+    }
+    if (presentarseVisible) {
+      tabs.push({ id: 'presentarse', label: 'Presentarse', active: presentarseActivo });
+      panes.push({ id: 'presentarse', contenedor: document.createElement('div') });
     }
 
     // Render pestañas y contenedores
     const ulTabs = container.querySelector('#detalleTabs');
     const divPanes = container.querySelector('#detallePanes');
+    
+    // Limpiar contenido anterior
+    ulTabs.innerHTML = '';
+    divPanes.innerHTML = '';
+    
+    // Determinar cuál tab debe estar activo
+    const activeTab = tabs.find(t => t.active)?.id || tabs[0]?.id;
+    
     tabs.forEach(({ id, label, active }) => {
       const li = document.createElement('li');
       li.className = 'nav-item';
@@ -154,56 +222,55 @@ export function vistaEleccion(container, idEleccion) {
                     </button>`;
       ulTabs.appendChild(li);
     });
+    
     panes.forEach(({ id, contenedor }) => {
       contenedor.id = `pane-${id}`;
-      contenedor.className = `tab-pane fade ${id === 'info' ? 'show active' : ''}`;
+      contenedor.className = `tab-pane fade ${id === activeTab ? 'show active' : ''}`;
       divPanes.appendChild(contenedor);
     });
 
-    // 5) Renderizado de cada pestaña llamando al componente
-    // — Información (ej. lista de partidos)
-    const paneInfo = panes.find(p => p.id === 'info').contenedor;
-    const rowPartidos = document.createElement('div');
-    rowPartidos.className = 'row row-cols-1 row-cols-md-2 g-3';
-    paneInfo.appendChild(rowPartidos);
-    partidos.forEach(partido => {
-      const cont = document.createElement('div');
-      const cleanup = fichaPartido(cont, partido);
-      componentes.add(cleanup);
-      rowPartidos.appendChild(cont);
-    });
-
-    // — Presentarse
-    // if (eleccion.estado === ESTADO_ELECCION.FUTURA && contexto.estaIdentificado()) {
-    //   const paneP = panes.find(p => p.id === 'presentarse').contenedor;
-    //   const cleanup = componentePresentarse(paneP, idEleccion, votante);
-    //   componentes.add(cleanup);
-    // }
+    // 5) Renderizado de cada pestaña
+    // — Información (lista de partidos)
+    const paneInfo = panes.find(p => p.id === 'info');
+    if (paneInfo) {
+      const rowPartidos = document.createElement('div');
+      rowPartidos.className = 'row row-cols-1 row-cols-md-2 g-3';
+      paneInfo.contenedor.appendChild(rowPartidos);
+      partidos.forEach(partido => {
+        const cont = document.createElement('div');
+        const cleanup = fichaPartido(cont, partido);
+        componentes.add(cleanup);
+        rowPartidos.appendChild(cont);
+      });
+    }
 
     // — Registro
-    if (panes.some(p => p.id === 'registro')) {
-      const paneR = panes.find(p => p.id === 'registro').contenedor;
-      const cleanup = fichaRegistro(paneR, eleccion, registro, actualizarRegistro);
+    const paneRegistro = panes.find(p => p.id === 'registro');
+    if (paneRegistro) {
+      const cleanup = fichaRegistro(paneRegistro.contenedor, eleccion, registro, actualizarRegistro);
       componentes.add(cleanup);
     }
 
     // — Votación
-    if (panes.some(p => p.id === 'votacion')) {
-      const paneV = panes.find(p => p.id === 'votacion').contenedor;
-      const cleanup = fichaVotacion(paneV, eleccion, partidos, registro, actualizarRegistro);
+    const paneVotacion = panes.find(p => p.id === 'votacion');
+    if (paneVotacion) {
+      const cleanup = fichaVotacion(paneVotacion.contenedor, eleccion, partidos, registro, actualizarRegistro);
       componentes.add(cleanup);
     }
 
     // — Resultados
-    if (panes.some(p => p.id === 'resultados')) {
-      const paneX = panes.find(p => p.id === 'resultados').contenedor;
-      const cleanup = fichaResultados(paneX, resultados);
+    const paneResultados = panes.find(p => p.id === 'resultados');
+    if (paneResultados) {
+      const cleanup = fichaResultados(paneResultados.contenedor, resultados);
       componentes.add(cleanup);
     }
-  }
 
-  // 6) listeners de pestañas (Bootstrap se encarga del cambio; aquí no necesitamos JS extra)
-  //    Si necesitaras lógica adicional al cambiar tab, podrías escuchar 'shown.bs.tab' aquí.
+    // — Presentarse
+    const panePresentarse = panes.find(p => p.id === 'presentarse');
+    if (panePresentarse) {
+      panePresentarse.contenedor.innerHTML = '<p class="text-center text-muted">Funcionalidad de presentarse en desarrollo...</p>';
+    }
+  }
 
   // 7) Cleanup total
   return () => {

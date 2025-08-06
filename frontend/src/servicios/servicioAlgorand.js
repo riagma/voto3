@@ -247,7 +247,7 @@ export const servicioAlgorand = {
 
   //----------------------------------------------------------------------------
 
-  async votar(mnemonico, appAddr, assetId, voto) {
+  async votar(mnemonico, assetId, appAddr, voto) {
     try {
       const cuenta = algosdk.mnemonicToSecretKey(mnemonico);
       if (!cuenta || !cuenta.addr || !cuenta.sk) {
@@ -283,17 +283,32 @@ export const servicioAlgorand = {
 
   //----------------------------------------------------------------------------
 
-  async destruirCuenta(mnemonico, assetId, creadorAddr) {
+  async destruirCuenta(mnemonico, assetId, appAddr, accAddr) {
     try {
       const cuenta = algosdk.mnemonicToSecretKey(mnemonico);
       if (!cuenta || !cuenta.addr || !cuenta.sk) {
         throw new Error("Cuenta inválida o mnemonico incorrecto.");
       }
 
+      const cuentaInfo = await algod.accountInformation(cuenta.addr).do();
+      const microAlgos = Number(cuentaInfo.amount || 0);
+      const borrada = cuentaInfo.delete || false;
+
+      let optOutTxId = null;
+      let closeTxId = null;
+
+      if (borrada || microAlgos <= Number(10000)) {
+        // Si la cuenta ya está borrada o tiene menos de 0.01 ALGOs
+        console.log("La cuenta ya está borrada o no tiene suficientes microALGOs.");
+        return {
+          optOutTxId,
+          closeTxId,
+          date: new Date()
+        };
+      }
+
       console.log(`Destruyendo cuenta ${cuenta.addr}...`);
 
-      // 1. Verificar que la cuenta tiene el asset y obtener la cantidad
-      const cuentaInfo = await algod.accountInformation(cuenta.addr).do();
       const assetIdBigInt = BigInt(assetId);
       const assetEncontrado = cuentaInfo.assets.find(a => a.assetId === assetIdBigInt);
 
@@ -301,19 +316,18 @@ export const servicioAlgorand = {
         console.log("La cuenta no tiene el asset, procediendo a cerrar solo la cuenta.");
       }
 
-      const params = await algod.getTransactionParams().do();
-
-      // 2. Hacer opt-out del asset si lo tiene
       if (assetEncontrado) {
         console.log(`Haciendo opt-out del asset ${assetId}...`);
-        
+
+        const axferParams = await algod.getTransactionParams().do();
         const optOutTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
           sender: cuenta.addr,
-          receiver: creadorAddr,
+          receiver: appAddr,
           amount: assetEncontrado.amount, // Devolver todo el balance del asset
           assetIndex: Number(assetId),
-          closeRemainderTo: creadorAddr, // Cerrar el asset hacia el creador
-          suggestedParams: params,
+          closeRemainderTo: appAddr, // Cerrar el asset hacia el creador
+          suggestedParams: axferParams,
+          note: this.toNote('CIERRE DE CUENTA'),  
         });
 
         const signedOptOutTxn = optOutTxn.signTxn(cuenta.sk);
@@ -325,31 +339,29 @@ export const servicioAlgorand = {
         console.log("Opt-out completado exitosamente");
       }
 
-      // 3. Cerrar la cuenta y devolver todo el ALGO al creador
-      console.log(`Cerrando cuenta y devolviendo ALGO a ${creadorAddr}...`);
+      console.log(`Cerrando cuenta y devolviendo ALGO a ${accAddr}...`);
       
       const closeParams = await algod.getTransactionParams().do();
-      
       const closeTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender: cuenta.addr,
-        receiver: creadorAddr,
+        receiver: accAddr,
         amount: 0, // Amount 0 para cerrar cuenta
-        closeRemainderTo: creadorAddr, // Enviar todo el balance restante al creador
+        closeRemainderTo: accAddr, // Enviar todo el balance restante la cuenta Voto3
         suggestedParams: closeParams,
+        note: this.toNote('CIERRE DE CUENTA'),
       });
 
       const signedCloseTxn = closeTxn.signTxn(cuenta.sk);
       const respClose = await algod.sendRawTransaction(signedCloseTxn).do();
-      const closeTxId = respClose.txId || respClose.txid || "null";
+      closeTxId = respClose.txId || respClose.txid || "null";
       console.log("Cierre de cuenta txId:", closeTxId);
 
       await algosdk.waitForConfirmation(algod, closeTxId, 4);
       console.log("Cuenta cerrada exitosamente");
 
       return {
-        optOutTxId: assetEncontrado ? (respOptOut.txId || respOptOut.txid) : null,
-        closeTxId: respClose.txId || respClose.txid,
-        cuentaAddr: cuenta.addr,
+        optOutTxId,
+        closeTxId,
         date: new Date()
       };
 
