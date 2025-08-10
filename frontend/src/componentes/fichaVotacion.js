@@ -1,3 +1,4 @@
+import { contexto } from '../modelo/contexto.js';
 import { limpiarManejadores } from '../utiles/utilesVistas.js';
 import { servicioVotante } from '../servicios/servicioVotante.js';
 import { servicioAlgorand } from '../servicios/servicioAlgorand.js';
@@ -98,7 +99,12 @@ export function fichaVotacion(contenedor, eleccion, partidos, registro, actualiz
         }
       }
     } else if (eleccion.actual === ELECCION_ACTUAL.VOTACION) {
-      if (!regFicha.papeDate) {
+      if (!contexto.estaIdentificado()) {
+        innerHTML += `<div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Debe estar identificado como votante para poder votar.
+        </div>`;
+      } else if (!regFicha.papeDate) {
         innerHTML += `<div class="alert alert-info">Debe solicitar la papeleta que le da acceso a la votación.</div>`;
         innerHTML += `<button id="btnSolicitar" class="btn btn-outline-primary">Solicitar Papeleta</button>`;
       } else if (!regFicha.votoDate) {
@@ -160,46 +166,48 @@ export function fichaVotacion(contenedor, eleccion, partidos, registro, actualiz
 
     contenedor.innerHTML = innerHTML;
 
-    if (eleccion.actual === ELECCION_ACTUAL.VOTACION) {
+    if (eleccion.actual === ELECCION_ACTUAL.VOTACION && contexto.estaIdentificado()) {
       if (!regFicha.papeDate) {
         const btn = contenedor.querySelector('#btnSolicitar');
-        const handler = async () => {
-          try {
-            regFicha = await servicioVotante.solicitarPapeletaEleccion(eleccion.id);
-            actualizarRegistro(regFicha);
-            
-            // Modal de éxito para papeleta
-            const modalExitoPapeleta = document.createElement('div');
-            modalExitoPapeleta.className = 'modal fade';
-            modalExitoPapeleta.innerHTML = `
-              <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content border-0 shadow">
-                  <div class="modal-body text-center p-3 p-md-4">
-                    <div class="text-primary mb-2 mb-md-3">
-                      <i class="bi bi-file-earmark-check-fill" style="font-size: 2rem;"></i>
+        if (btn) {
+          const handler = async () => {
+            try {
+              regFicha = await servicioVotante.solicitarPapeletaEleccion(eleccion.id);
+              actualizarRegistro(regFicha);
+              
+              // Modal de éxito para papeleta
+              const modalExitoPapeleta = document.createElement('div');
+              modalExitoPapeleta.className = 'modal fade';
+              modalExitoPapeleta.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                  <div class="modal-content border-0 shadow">
+                    <div class="modal-body text-center p-3 p-md-4">
+                      <div class="text-primary mb-2 mb-md-3">
+                        <i class="bi bi-file-earmark-check-fill" style="font-size: 2rem;"></i>
+                      </div>
+                      <h6 class="text-primary mb-2 fw-bold">¡Papeleta Recibida!</h6>
+                      <p class="mb-3 small">Ya puede proceder a emitir su voto en esta elección.</p>
+                      <button type="button" class="btn btn-primary btn-sm px-4" data-bs-dismiss="modal">Continuar</button>
                     </div>
-                    <h6 class="text-primary mb-2 fw-bold">¡Papeleta Recibida!</h6>
-                    <p class="mb-3 small">Ya puede proceder a emitir su voto en esta elección.</p>
-                    <button type="button" class="btn btn-primary btn-sm px-4" data-bs-dismiss="modal">Continuar</button>
                   </div>
                 </div>
-              </div>
-            `;
-            document.body.appendChild(modalExitoPapeleta);
-            const bsModalExitoPapeleta = new bootstrap.Modal(modalExitoPapeleta);
-            modalExitoPapeleta.addEventListener('hidden.bs.modal', () => {
-              document.body.removeChild(modalExitoPapeleta);
-            });
-            bsModalExitoPapeleta.show();
-            
-          } catch (error) {
-            alert('Error al solicitar la papeleta: ' + (error?.message || error));
-          } finally {
-            render();
-          }
-        };
-        btn.addEventListener('click', handler);
-        manejadores.add([btn, 'click', handler]);
+              `;
+              document.body.appendChild(modalExitoPapeleta);
+              const bsModalExitoPapeleta = new bootstrap.Modal(modalExitoPapeleta);
+              modalExitoPapeleta.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modalExitoPapeleta);
+              });
+              bsModalExitoPapeleta.show();
+              
+            } catch (error) {
+              alert('Error al solicitar la papeleta: ' + (error?.message || error));
+            } finally {
+              render();
+            }
+          };
+          btn.addEventListener('click', handler);
+          manejadores.add([btn, 'click', handler]);
+        }
       } else if (!regFicha.votoDate) {
         contenedor.querySelectorAll('.btn-votar').forEach(btn => {
           const handler = async () => {

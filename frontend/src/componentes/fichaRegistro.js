@@ -1,4 +1,5 @@
 // muestra o gestiona el registro del votante
+import { contexto } from '../modelo/contexto.js';
 import { servicioVotante } from '../servicios/servicioVotante.js';
 import { servicioAlgorand } from '../servicios/servicioAlgorand.js';
 import { limpiarManejadores } from '../utiles/utilesVistas.js';
@@ -80,113 +81,77 @@ export function fichaRegistro(contenedor, eleccion, registro, actualizarRegistro
     }
 
     if (eleccion.actual === ELECCION_ACTUAL.REGISTRO && !regFicha.compromiso) {
-      innerHTML += `
-        <div class="mt-3">
-          <button id="btnRegistrar" class="btn btn-primary">
-            <i class="bi bi-person-plus me-2"></i>Registrarse para votar
-          </button>
-        </div>`;
+      if (!contexto.estaIdentificado()) {
+        innerHTML += `
+          <div class="mt-3">
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              Debe estar identificado como votante para poder registrarse.
+            </div>
+          </div>`;
+      } else {
+        innerHTML += `
+          <div class="mt-3">
+            <button id="btnRegistrar" class="btn btn-primary">
+              <i class="bi bi-person-plus me-2"></i>Registrarse para votar
+            </button>
+          </div>`;
+      }
     }
 
     contenedor.innerHTML = innerHTML;
 
-    if (eleccion.actual === ELECCION_ACTUAL.REGISTRO && !regFicha.compromiso) {
+    if (eleccion.actual === ELECCION_ACTUAL.REGISTRO && !regFicha.compromiso && contexto.estaIdentificado()) {
       const btn = contenedor.querySelector('#btnRegistrar');
-      const handler = async () => {
-        try {
-          // Mostrar modal de confirmación similar al de votación
-          const confirmacion = await mostrarConfirmacionRegistro();
-          
-          if (!confirmacion) {
-            return; // Usuario canceló
+      if (btn) {
+        const handler = async () => {
+          try {
+            regFicha = await servicioVotante.registrarVotanteEleccion(eleccion.id);
+            actualizarRegistro(regFicha);
+            
+            // Modal de éxito
+            mostrarExitoRegistro();
+            
+          } catch (error) {
+            // Si el usuario cancela o hay error, mostrar mensaje apropiado
+            if (error?.message?.includes('cancel') || error?.message?.includes('abort')) {
+              mostrarRegistroCancelado();
+            } else {
+              alert('Error al registrar: ' + (error?.message || error));
+            }
+          } finally {
+            render();
           }
-
-          regFicha = await servicioVotante.registrarVotanteEleccion(eleccion.id);
-          actualizarRegistro(regFicha);
-          
-          // Modal de éxito
-          mostrarExitoRegistro();
-          
-        } catch (error) {
-          alert('Error al registrar: ' + (error?.message || error));
-        } finally {
-          render();
-        }
-      };
-      btn.addEventListener('click', handler);
-      manejadores.add([btn, 'click', handler]);
+        };
+        btn.addEventListener('click', handler);
+        manejadores.add([btn, 'click', handler]);
+      }
     }
   }
 
-  function mostrarConfirmacionRegistro() {
-    return new Promise((resolve) => {
-      const modal = document.createElement('div');
-      modal.className = 'modal fade';
-      modal.tabIndex = -1;
-      modal.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-          <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white border-0 p-3">
-              <div class="d-flex align-items-center w-100">
-                <i class="bi bi-person-plus-fill me-2 flex-shrink-0" style="font-size: 1.25rem;"></i>
-                <div class="flex-grow-1">
-                  <h6 class="modal-title mb-0 fw-bold">Confirmar Registro</h6>
-                  <small class="opacity-75 d-block">Se creará una cuenta temporal</small>
-                </div>
-              </div>
+  function mostrarRegistroCancelado() {
+    const modalCancelado = document.createElement('div');
+    modalCancelado.className = 'modal fade';
+    modalCancelado.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-body text-center p-3">
+            <div class="text-warning mb-2">
+              <i class="bi bi-x-circle-fill" style="font-size: 2rem;"></i>
             </div>
-            <div class="modal-body p-3 text-center">
-              <div class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 mb-3 py-2">
-                <div class="fw-bold text-primary">${eleccion.nombre}</div>
-                <small class="text-muted">Registro de votante</small>
-              </div>
-            </div>
-            <div class="modal-footer border-0 pt-0 pb-3 px-3">
-              <div class="d-grid gap-2 w-100">
-                <div class="row g-2">
-                  <div class="col-6">
-                    <button type="button" class="btn btn-outline-secondary w-100 btn-sm" id="cancelarRegistro">
-                      <i class="bi bi-x-circle me-1 d-none d-md-inline"></i>Cancelar
-                    </button>
-                  </div>
-                  <div class="col-6">
-                    <button type="button" class="btn btn-primary w-100 btn-sm" id="confirmarRegistro">
-                      <i class="bi bi-check-circle me-1 d-none d-md-inline"></i>Confirmar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <h6 class="text-warning mb-2 fw-bold">Registro Cancelado</h6>
+            <p class="mb-3 small">El registro para esta elección ha sido cancelado.</p>
+            <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">Continuar</button>
           </div>
         </div>
-      `;
-
-      document.body.appendChild(modal);
-      
-      const bsModal = new bootstrap.Modal(modal, {
-        backdrop: 'static',
-        keyboard: false
-      });
-
-      const btnCancelar = modal.querySelector('#cancelarRegistro');
-      const btnConfirmar = modal.querySelector('#confirmarRegistro');
-
-      btnCancelar.addEventListener('click', () => {
-        bsModal.hide();
-        resolve(false);
-      });
-
-      btnConfirmar.addEventListener('click', () => {
-        bsModal.hide();
-        resolve(true);
-      });
-
-      modal.addEventListener('hidden.bs.modal', () => {
-        document.body.removeChild(modal);
-      });
-
-      bsModal.show();
+      </div>
+    `;
+    document.body.appendChild(modalCancelado);
+    const bsModalCancelado = new bootstrap.Modal(modalCancelado);
+    modalCancelado.addEventListener('hidden.bs.modal', () => {
+      document.body.removeChild(modalCancelado);
     });
+    bsModalCancelado.show();
   }
 
   function mostrarExitoRegistro() {

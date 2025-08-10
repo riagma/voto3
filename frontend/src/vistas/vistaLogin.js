@@ -6,11 +6,16 @@ export function vistaLogin(container) {
   let manejadores = new Set();
   let modoRegistro = false;
 
+                          // <li>Use credenciales <strong>diferentes</strong> a las del censo electoral</li>
+                          // <li>Si se registra en una elección, <strong>recuerde bien</strong> ese usuario y contraseña</li>
+                          // <li>Si los olvida, <strong>no podrá votar</strong> - no hay recuperación posible</li>
+
+
   function renderizar() {
     container.innerHTML = `
       <div class="container py-4">
         <div class="row justify-content-center">
-          <div class="col-12 col-sm-8 col-md-6 col-lg-5 col-xl-4">
+          <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
             <div class="card border-0 shadow">
               <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -25,10 +30,10 @@ export function vistaLogin(container) {
                       <i class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0" style="color: #856404;"></i>
                       <div class="small">
                         <strong>Importante:</strong>
-                        <ul class="mb-0 mt-1">
-                          <li>Use credenciales <strong>diferentes</strong> a las del censo electoral</li>
-                          <li>Si se registra en una elección, <strong>recuerde bien</strong> este usuario y contraseña</li>
-                          <li>Si los olvida, <strong>no podrá votar</strong> - no hay recuperación posible</li>
+                        <ul class="mb-0 mt-1 ps-0 ps-md-4">
+                          <li>Use credenciales <strong>diferentes</strong> a las del censo electoral.</li>
+                          <li>Si se registra en una elección, <strong>recuerde bien</strong> este usuario y contraseña.
+                          Si los olvida, <strong>ya no podrá votar</strong> en esa elección.</li>
                         </ul>
                       </div>
                     </div>
@@ -111,12 +116,12 @@ export function vistaLogin(container) {
     function configurarMostrarContrasena(btnId, inputName) {
       const btnShow = container.querySelector(`#${btnId}`);
       const inputPass = container.querySelector(`input[name="${inputName}"]`);
-      
+
       if (btnShow && inputPass) {
         const onTogglePass = () => {
           const tipo = inputPass.type === 'password' ? 'text' : 'password';
           inputPass.type = tipo;
-          btnShow.innerHTML = `<i class="bi bi-eye${tipo==='password'?'':'-slash'}"></i>`;
+          btnShow.innerHTML = `<i class="bi bi-eye${tipo === 'password' ? '' : '-slash'}"></i>`;
         };
         btnShow.addEventListener('click', onTogglePass);
         manejadores.add([btnShow, 'click', onTogglePass]);
@@ -125,11 +130,11 @@ export function vistaLogin(container) {
 
     if (modoRegistro) {
       const formReg = container.querySelector('#formRegistro');
-      
+
       // Configurar botones de mostrar contraseña para registro
       configurarMostrarContrasena('btnMostrarContrasena1', 'contrasena');
       configurarMostrarContrasena('btnMostrarContrasena2', 'repetirContrasena');
-      
+
       const onCrear = async e => {
         e.preventDefault();
         divError.style.display = 'none';
@@ -150,7 +155,7 @@ export function vistaLogin(container) {
 
     } else {
       const formLog = container.querySelector('#formLogin');
-      
+
       // Configurar botón de mostrar contraseña para login
       configurarMostrarContrasena('btnMostrarContrasena', 'contrasena');
 

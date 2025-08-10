@@ -121,7 +121,7 @@ export const controladorEleccion = {
         peticion.params.idEleccion
       );
       if (!resultados) {
-        respuesta.json({});
+        return respuesta.json({});
       }
       const partidos = serviciosResultados.obtenerResultadosPartidos(
         peticion.bd,
@@ -135,9 +135,6 @@ export const controladorEleccion = {
       respuesta.status(500).json({ error: error.message });
     }
   },
-
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 const DB_NAME = 'Voto3';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+const DB_PRESERVE = false; // true = mantener datos, false = borrar y recrear
 
 class Voto3IDB {
   constructor() {
@@ -19,14 +20,31 @@ class Voto3IDB {
 
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
+        const oldVersion = event.oldVersion;
+        const newVersion = event.newVersion;
+
+        console.log(`Actualizando base de datos de versión ${oldVersion} a ${newVersion}`);
+        console.log(`Preservar datos: ${DB_PRESERVE}`);
+
+        if (!DB_PRESERVE) {
+          // Borrar todas las tablas existentes
+          console.log('Borrando todas las tablas existentes...');
+          const storeNames = Array.from(db.objectStoreNames);
+          storeNames.forEach(storeName => {
+            console.log(`Eliminando tabla: ${storeName}`);
+            db.deleteObjectStore(storeName);
+          });
+        }
 
         // Crear tabla usuarios con clave primaria simple 'nombreUsuario'
         if (!db.objectStoreNames.contains('usuarios')) {
+          console.log('Creando tabla usuarios');
           db.createObjectStore('usuarios', { keyPath: 'nombreUsuario' });
         }
 
         // Crear tabla registro con clave primaria compuesta [nombreUsuario, eleccionId]
         if (!db.objectStoreNames.contains('registro')) {
+          console.log('Creando tabla registro');
           db.createObjectStore('registro', { keyPath: ['nombreUsuario', 'eleccionId'] });
         }
       };
