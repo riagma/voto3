@@ -1,5 +1,3 @@
-import { desencriptarNodeJSON } from "../src/utiles/utilesCrypto.js";
-import { CLAVE_PRUEBAS } from "../src/utiles/constantes.js";
 import { servicioAlgorand } from "../src/servicios/servicioAlgorand.js"; 
 
 const [,, assetId, cuentaAddr] = process.argv;

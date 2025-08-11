@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import e from 'express';
 import { abrirRegistroRaicesEleccion } from '../algorand/registrarRaices.js';
 import { abrirConexionBD, cerrarConexionBD } from '../modelo/BD.js';
 

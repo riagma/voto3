@@ -6,11 +6,6 @@ export function vistaLogin(container) {
   let manejadores = new Set();
   let modoRegistro = false;
 
-                          // <li>Use credenciales <strong>diferentes</strong> a las del censo electoral</li>
-                          // <li>Si se registra en una elección, <strong>recuerde bien</strong> ese usuario y contraseña</li>
-                          // <li>Si los olvida, <strong>no podrá votar</strong> - no hay recuperación posible</li>
-
-
   function renderizar() {
     container.innerHTML = `
       <div class="container py-4">

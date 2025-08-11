@@ -10,10 +10,12 @@ const router = express.Router();
  * Verifica si el servicio IPFS está activo
  */
 router.get('/estado', (req, res) => {
-  res.json({ 
+  const respuesta = { 
     activo: estaActivo(),
     mensaje: estaActivo() ? 'IPFS activo' : 'IPFS inactivo'
-  });
+  };
+  console.log('Estado del servicio IPFS consultado:', respuesta);
+  res.json(respuesta);
 });
 
 /**

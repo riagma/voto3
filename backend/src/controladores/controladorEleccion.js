@@ -1,9 +1,10 @@
 import { serviciosElecciones } from '../servicios/serviciosElecciones.js';
-import { 
-  serviciosContratos, 
+import {
+  serviciosContratos,
   serviciosCuentas,
-  serviciosPruebas, 
-  serviciosRaices } from '../servicios/serviciosContratos.js';
+  serviciosPruebas,
+  serviciosRaices
+} from '../servicios/serviciosContratos.js';
 import { serviciosPartidos } from '../servicios/serviciosPartidos.js';
 import { serviciosResultados } from '../servicios/serviciosResultados.js';
 import { serviciosRegistros } from '../servicios/serviciosRegistros.js';
@@ -156,35 +157,16 @@ export const controladorEleccion = {
   },
 
   //----------------------------------------------------------------------------
-
-  // async obtenerDetalleEleccion(peticion, respuesta) {
-  //   try {
-  //     const detalleEleccion = await serviciosElecciones.obtenerDetalle(
-  //       peticion.bd,
-  //       peticion.params.idEleccion,
-  //       peticion.votante.dni
-  //     );
-  //     if (!detalleEleccion) {
-  //       return respuesta.status(404).json({ error: 'Elección no encontrada' });
-  //     }
-  //     console.log('Detalle de elección:', detalleEleccion);
-  //     respuesta.json(detalleEleccion);
-  //   } catch (error) {
-  //     respuesta.status(500).json({ error: error.message });
-  //   }
-  // },
-
-  //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
 
   async registrarseEnEleccion(peticion, respuesta, siguiente) {
     try {
-      const registro = { 
+      const registro = {
         votanteId: peticion.votante.dni,
         eleccionId: peticion.params.idEleccion,
         compromisoTxId: 'compromisoTxId-' + Date.now(),
         fechaRegistro: new Date().toISOString(),
-        ...peticion.body,  
+        ...peticion.body,
       };
       console.log('Registrando votante:', registro);
       await serviciosRegistros.crear(peticion.bd, registro);
@@ -200,7 +182,7 @@ export const controladorEleccion = {
   async anularRegistroEnEleccion(peticion, respuesta) {
     try {
       await serviciosRegistros.eliminar(
-        peticion.bd, 
+        peticion.bd,
         peticion.votante.dni,
         peticion.params.idEleccion
       );

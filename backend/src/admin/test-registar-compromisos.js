@@ -2,54 +2,94 @@
 import algosdk from 'algosdk';
 import { registrarVotanteEleccion } from '../algorand/registrarCompromisos.js';
 import { abrirConexionBD, cerrarConexionBD } from '../modelo/BD.js';
-import { votanteDAO } from '../modelo/DAOs.js';
-import { 
+import { votanteDAO, votanteDatosEleccionDAO } from '../modelo/DAOs.js';
+import {
   calcularPoseidon2,
   encriptarJSON,
   randomBigInt
 } from '../utiles/utilesCrypto.js';
 import { CLAVE_PRUEBAS } from '../utiles/constantes.js';
 
+const TAM_LOTE = ALGO_ENV === 'localnet' ? 100 : 10;
+
 const eleccionId = process.argv[2] ? parseInt(process.argv[2]) : undefined;
 const numeroVotantes = process.argv[3] ? parseInt(process.argv[3]) : 100;
 
 if (!eleccionId) {
-    console.error(`Uso: node ${process.argv[1]} <elección-id> <número-votantes>?`);
-    process.exit(1);
+  console.error(`Uso: node ${process.argv[1]} <elección-id> <número-votantes>?`);
+  process.exit(1);
 }
+
+//----------------------------------------------------------------------------
 
 try {
-    const bd = abrirConexionBD();
+  const bd = abrirConexionBD();
 
-    const votantesSinRegistro = votanteDAO.obtenerVotantesSinRegistro(bd, eleccionId, numeroVotantes);
+  let contadorVotantes = 0;
 
-    if (votantesSinRegistro.length > 0) {
+  while (contadorVotantes < numeroVotantes) {
 
-        console.log(`Se registrarán ${votantesSinRegistro.length} votantes en la elección ${eleccionId}.`);
+    const max = Math.min(TAM_LOTE, numeroVotantes - contadorVotantes);
 
-        console.log = function () {}; // Desactiva console.log para evitar demasiada salida
+    const votantesSinRegistro = votanteDAO.obtenerVotantesSinRegistro(bd, eleccionId, max);
 
-        for (const votante of votantesSinRegistro) {
-
-            const votanteId = votante.dni;
-
-            const { compromiso, datosPrivados } = await generarDatosPrivadoPruebas();
-
-            await registrarVotanteEleccion(bd, { votanteId, eleccionId, compromiso, datosPrivados });
-
-            console.log(`Compromiso registrado para el votante ${votante.dni} en la elección ${eleccionId}: ${compromiso}`);
-        }
+    if (!votantesSinRegistro || votantesSinRegistro.length === 0) {
+      console.error(`No se encontraron más votantes sin registrar para la elección ${eleccionId}.`);
+      break;
     }
 
-    console.log(`Total de votantes registrados ${votantesSinRegistro.length} en la elección ${eleccionId}.`);
- 
+    contadorVotantes += datosVotantes.length;
+    console.log(`Registrando ${datosVotantes.length} votantes en la elección ${eleccionId}.`);
+
+    const loteLabel = `Procesados ${datosVotantes.length} votantes. Total: ${contadorVotantes}/${numeroVotantes}`;
+    console.time(loteLabel);
+
+    //--------------
+    console.log = function () { }; // Desactiva console.log para evitar demasiada salida
+    //--------------
+
+    const resultados = await Promise.all(
+
+      votantesSinRegistro.map(async (votante) => {
+        const votanteId = votante.dni;
+
+        const { compromiso, datosPrivados, datosPublicos } = await generarDatosPrivadoPruebas();
+
+        const registroVotante = await registrarVotanteEleccion(bd, {
+          votanteId,
+          eleccionId,
+          compromiso,
+          datosPrivados,
+        });
+
+        crearVotanteDatosEleccion(bd,
+          votanteId,
+          eleccionId,
+          registroVotante,
+          datosPublicos
+        );
+
+        return { votanteId, compromiso };
+      })
+    );
+
+    for (const { votanteId, compromiso } of resultados) {
+      console.log(`Compromiso registrado para el votante ${votanteId} en la elección ${eleccionId}: ${compromiso}`);
+    }
+
+    console.log = consoleLog;
+    console.timeEnd(loteLabel);
+  }
+
 } catch (err) {
-    console.error('Error abriendo el registro de compromisos:', err);
-    process.exit(1);
+  console.error('Error creando el registro de compromisos:', err);
+  process.exit(1);
 
 } finally {
-    cerrarConexionBD();
+  cerrarConexionBD();
 }
+
+//----------------------------------------------------------------------------
 
 async function generarDatosPrivadoPruebas() {
 
@@ -76,7 +116,61 @@ async function generarDatosPrivadoPruebas() {
   // console.log('Datos privados encriptados:', datosPrivados);
   // console.log('Datos privados desencriptados:', await desencriptarJSON(datosPrivados, CLAVE_PRUEBAS));
 
-  return { compromiso, datosPrivados };
+  return { compromiso, datosPrivados, datosPublicos };
 }
+
+//----------------------------------------------------------------------------
+
+function crearVotanteDatosEleccion(bd, votanteId, eleccionId, registroVotante, datosPublicos) {
+
+  const id = {
+    votanteId: votanteId,
+    eleccionId: eleccionId,
+  };
+
+  const datos = {
+    votanteId: votanteId,
+    eleccionId: eleccionId,
+    cuentaAddr: datosPublicos.cuentaAddr,
+    mnemonico: datosPublicos.mnemonico,
+    secreto: datosPublicos.secreto,
+    anulador: datosPublicos.anulador,
+    anuladorHash: '-',
+    compromiso: registroVotante.compromiso,
+    compromisoIdx: registroVotante.compromisoIdx,
+    compromisoTxId: registroVotante.compromisoTxId,
+    appId: '-',
+    appAddr: '-',
+    tokenId: '-',
+    numBloques: 0,
+    tamBloque: 0,
+    tamResto: 0,
+    txIdRaizInicial: '-',
+    urlCircuito: '-',
+    bloque: 0,
+    bloqueIdx: 0,
+    raiz: '-',
+    txIdRaiz: '-',
+    urlCompromisos: '-',
+    proof: '-',
+    publicInputs: '-',
+    claveVotoPublica: '-',
+    voto: '-',
+    votoEnc: '-',
+    votoTxId: '-',
+  };
+
+  if (votanteDatosEleccionDAO.obtenerPorId(bd, id)) {
+    console.log(`El votante ${votanteId} ya tiene datos para la elección ${eleccionId}.`);
+    votanteDatosEleccionDAO.actualizar(bd, id, datos);
+  } else {
+    console.log(`Creando datos del votante ${votanteId} para la elección ${eleccionId}.`);
+    votanteDatosEleccionDAO.crear(bd, datos);
+  }
+}
+
+//----------------------------------------------------------------------------
+
+
 
 

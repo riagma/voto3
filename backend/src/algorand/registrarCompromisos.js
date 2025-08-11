@@ -87,7 +87,7 @@ export async function registrarVotanteEleccion(bd, { votanteId, eleccionId, comp
       cmp: compromiso,
     };
 
-    // console.log(`Compromiso a registrar: ${JSON.stringify(compromisoNote)}`);
+    console.log(`Compromiso a registrar: ${JSON.stringify(compromisoNote)}`);
 
     const resultadoRegistrar = await registrarCompromiso(bd, {
       contratoId: eleccionId,
@@ -101,7 +101,9 @@ export async function registrarVotanteEleccion(bd, { votanteId, eleccionId, comp
     console.log(`Compromiso registrado para el votante ${votanteId} en la elección ${eleccionId}}`);
     console.log(`Transacción registrada: ${resultadoRegistrar.txId}`);
 
-    return registroVotante.compromisoIdx;
+    registroVotante.compromisoTxId = resultadoRegistrar.txId;
+
+    return registroVotante;
 
   } catch (error) {
     // TODO: Buscar el assert o su descripción en el error

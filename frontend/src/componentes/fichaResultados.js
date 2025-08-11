@@ -1,4 +1,3 @@
-// muestra estadísticas globales y por partido
 import { limpiarManejadores } from '../utiles/utilesVistas.js';
 
 export function fichaResultados(contenedor, resultados) {

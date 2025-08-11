@@ -2,16 +2,18 @@
 import { algorand } from '../algorand/algorand.js';
 import { toNote } from '../algorand/algoUtiles.js';
 import { abrirConexionBD, cerrarConexionBD } from '../modelo/BD.js';
-import { votanteDatosEleccionDAO, eleccionDAO } from '../modelo/DAOs.js';
+import { votanteDatosEleccionDAO, eleccionDAO, partidoDAO } from '../modelo/DAOs.js';
 
-import { encriptarConClavePublica} from '../utiles/utilesCrypto.js';
+import { ALGO_ENV } from '../utiles/constantes.js';
 
-import { CLAVE_MAESTRA, CLAVE_PRUEBAS } from '../utiles/constantes.js';
+const TAM_LOTE = ALGO_ENV === 'localnet' ? 100 : 10;
+
+const consoleLog = console.log;
 
 //--------------
 
 const eleccionId = process.argv[2] ? parseInt(process.argv[2]) : undefined;
-const numeroVotos = process.argv[3] ? parseInt(process.argv[3]) : 100;
+const numeroVotantes = process.argv[3] ? parseInt(process.argv[3]) : 100;
 
 if (!eleccionId) {
   console.error(`Uso: node ${process.argv[1]} <elección-id> <número-votos>?`);
@@ -26,6 +28,34 @@ async function tienePapeleta(assetId, cuentaAddr) {
   // console.log(accountInfo);
 
   return accountInfo.balance > 0n;
+}
+
+//----------------------------------------------------------------------------
+
+let partidos = null
+let pesos = []
+
+function elegirPartido(bd, eleccionId) {
+
+  if (!partidos) {
+    partidos = partidoDAO.obtenerPorEleccion(bd, eleccionId);
+    let sumaPesos = 0;
+    for (const partido of partidos) {
+      const peso = Math.random();
+      pesos.push(peso);
+      sumaPesos += peso;
+    }
+    pesos = pesos.map(peso => peso / sumaPesos);
+  }
+
+  const r = Math.random();
+
+  let acumulado = 0;
+  for (let i = 0; i < partidos.length; i++) {
+    acumulado += pesos[i];
+    if (r < acumulado) return partidos[i];
+  }
+  return partidos[partidos.length - 1];
 }
 
 //----------------------------------------------------------------------------
@@ -67,88 +97,65 @@ try {
     throw new Error(`No se encontró la elección con ID ${eleccionId}`);
   }
 
-  // console.log(eleccion);
-
-  // if (!eleccion.claveVotoPublica || !eleccion.claveVotoPrivada ) {
-  //   const { clavePublica, clavePrivada } = await generarParClavesRSA();
-  //   const clavePrivadaEncriptada = await encriptar(clavePrivada, CLAVE_MAESTRA);
-  //   eleccion.claveVotoPublica = clavePublica;
-  //   eleccion.claveVotoPrivada = clavePrivadaEncriptada;
-  //   eleccionDAO.actualizar(bd, { id: eleccionId }, { 
-  //     claveVotoPublica: clavePublica, 
-  //     claveVotoPrivada: clavePrivadaEncriptada 
-  //   });
-  // }
-
-
-  // const contrato = contratoBlockchainDAO.obtenerPorId(bd, { contratoId: eleccionId });
-  // if (!contrato) {
-  //   throw new Error(`No se encontró el contrato para la elección ${eleccionId}`);
-  // }
-
-  // console.log(contrato);
-
-  //--------------
-  const consoleLog = console.log;
-  console.log = function () {}; // Desactiva console.log para evitar demasiada salida
   //--------------
 
-  let contadorVotos = 0;
-  let compromisoIdx = 0;
+  let contadorVotantes = 0;
 
-  while (contadorVotos < numeroVotos) {
+  while (contadorVotantes < numeroVotantes) {
 
-    const votantes = votanteDatosEleccionDAO.obtenerDatosVotantes(bd,
-      {
-        eleccionId,
-        compromisoIdx,
-        max: 1000
-      });
+    const max = Math.min(TAM_LOTE, numeroVotantes - contadorVotantes);
 
-    if (!votantes || votantes.length === 0) {
-      console.log(`No hay votantes registrados para la elección ${eleccionId} con compromisoIdx ${compromisoIdx}.`);
+    const datosVotantes = votanteDatosEleccionDAO.obtenerDatosVotantesVotar(bd, { eleccionId, max });
+
+    if (!datosVotantes || datosVotantes.length === 0) {
+      console.error(`No se encontraron más datos de votantes para la elección ${eleccionId}.`);
       break;
     }
-   
-    compromisoIdx += votantes.length;
-    
-    for (const votante of votantes) {
 
-      if(await tienePapeleta(votante.tokenId, votante.cuentaAddr)) {
+    contadorVotantes += datosVotantes.length;
+    console.log(`Votando ${datosVotantes.length} veces en la elección ${eleccionId}.`);
 
-        console.log(`Votando ${votante.votanteId} en la elección ${eleccionId}.`);
+    const loteLabel = `Procesados ${datosVotantes.length} votantes. Total: ${contadorVotantes}/${numeroVotantes}`;
+    console.time(loteLabel);
 
-        // const voto = { voto: await encriptarConClavePublica(votante.voto, eleccion.claveVotoPublica) };
-        const voto = { voto: votante.votoEnc };
+    //--------------
+    // console.log = function () { }; // Desactiva console.log para evitar demasiada salida
+    //--------------
 
-        const resultadoVotar = await votar(
-          votante.mnemonico, 
-          votante.appAddr, 
-          votante.tokenId, voto);
+    const datosCalculados = await Promise.all(
+      datosVotantes.map(async (datosVotante) => {
 
-        contadorVotos++;
+        if (await tienePapeleta(votante.tokenId, votante.cuentaAddr)) {
 
-        votanteDatosEleccionDAO.actualizar(bd, 
-          { 
-            eleccionId, 
-            votanteId: votante.votanteId 
-          }, 
-          { 
-            votoTxId: resultadoVotar.txIds[0]
-          });
+          console.log(`Votando ${votante.votanteId} en la elección ${eleccionId}.`);
 
-        console.log(`Voto registrado para ${votante.votanteId} en la elección ${eleccionId}. TxId: ${resultadoVotar.txIds[0]}`);
+          datosVotante.voto = elegirPartido(bd, datosVotante.eleccionId).siglas;
+          datosVotante.votoEnc = await encriptarConClavePublica(JSON.stringify({
+            siglas: datosVotante.voto,
+            nonce: randomBytes(16).toString('hex')
+          }), eleccion.claveVotoPublica);
 
-        if(contadorVotos >= numeroVotos) {
-          console.log(`Se alcanzó el número máximo de votos: ${numeroVotos}`);
-          break;
+          const voto = { voto: datosVotante.votoEnc };
+
+          const resultadoVotar = await votar(
+            votante.mnemonico,
+            votante.appAddr,
+            votante.tokenId, voto);
+
+          datosVotante.votoTxId = resultadoVotar.txIds[0];
         }
-      }
-    }
-  }
 
-  console.log = consoleLog;
-  console.log(`Total de votos realizados: ${contadorVotos} para la elección ${eleccionId}.`);
+        return datosVotante;
+      })
+    );
+
+    for (const datosVotante of datosCalculados) {
+      actualizarDatosVotante(bd, datosVotante);
+    }
+
+    console.log = consoleLog;
+    console.timeEnd(loteLabel);
+  }
 
 } catch (err) {
   console.error('Error en el test de votaciones:', err);
@@ -158,6 +165,9 @@ try {
   cerrarConexionBD();
   process.exit(0);
 }
+
+//----------------------------------------------------------------------------
+
 
 
 

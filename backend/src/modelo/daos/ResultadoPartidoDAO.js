@@ -5,7 +5,6 @@ export class ResultadoPartidoDAO extends BaseDAO {
     super('ResultadoPartido');
   }
 
-  // Registrar resultado (puedes usar this.crear directamente)
   registrarResultado(bd, partidoId, eleccionId, votos, porcentaje) {
     return this.crear(bd, {
       partidoId,
@@ -15,7 +14,6 @@ export class ResultadoPartidoDAO extends BaseDAO {
     });
   }
 
-  // Actualizar resultado por partidoId y eleccionId (clave compuesta)
   actualizarResultado(bd, partidoId, eleccionId, votos, porcentaje) {
     return this.actualizar(
       bd,
@@ -24,17 +22,14 @@ export class ResultadoPartidoDAO extends BaseDAO {
     );
   }
 
-  // Eliminar resultado por partidoId y eleccionId (clave compuesta)
   eliminarResultado(bd, partidoId, eleccionId) {
     return this.eliminar(bd, { partidoId, eleccionId });
   }
 
-  // Obtener resultado por partidoId y eleccionId (clave compuesta)
   obtenerPorPartidoYEleccion(bd, partidoId, eleccionId) {
     return this.obtenerPorId(bd, { partidoId, eleccionId });
   }
 
-  // Obtener todos los resultados de una elección
   obtenerPorEleccion(bd, eleccionId) {
     return bd.prepare(
       `SELECT rp.*, p.nombre as nombrePartido
@@ -45,7 +40,6 @@ export class ResultadoPartidoDAO extends BaseDAO {
     ).all([eleccionId]);
   }
 
-  // Obtener todos los resultados de un partido en todas las elecciones
   obtenerPorPartido(bd, partidoId) {
     return bd.prepare(
       `SELECT rp.*, e.nombre as nombreEleccion

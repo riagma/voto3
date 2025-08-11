@@ -1,21 +1,3 @@
-// import fs from 'node:fs'; // para streams y métodos sync
-// import fsp from 'node:fs/promises'; // para métodos async/promesa
-// import zlib from 'node:zlib';
-// import path from 'node:path';
-// import { fileURLToPath } from 'node:url';
-
-// import { compile, createFileManager } from "@noir-lang/noir_wasm";
-// import { UltraHonkBackend } from "@aztec/bb.js";
-// import { Noir } from "@noir-lang/noir_js";
-
-// import initNoirC from "@noir-lang/noirc_abi";
-// import initACVM from "@noir-lang/acvm_js";
-// import acvm from "@noir-lang/acvm_js/web/acvm_js_bg.wasm?url";
-// import noirc from "@noir-lang/noirc_abi/web/noirc_abi_wasm_bg.wasm?url";
-
-// Initialize WASM modules
-// await Promise.all([initACVM(fetch(acvm)), initNoirC(fetch(noirc))]);
-
 import { ArbolMerkle } from './ArbolMerkle.js'
 import { calcularPoseidon2, calcularSha256, bigInt2HexStr } from './utilesCrypto.js';
 import { diagnosticarCircuito, generarPrueba } from './utilesZK.js';

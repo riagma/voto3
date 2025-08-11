@@ -5,7 +5,6 @@ export class ResultadoEleccionDAO extends BaseDAO {
     super('ResultadoEleccion');
   }
 
-  // Crear resultado (puedes usar this.crear directamente si los campos coinciden)
   crearResultado(bd, datos) {
     return this.crear(bd, {
       ...datos,
@@ -13,24 +12,20 @@ export class ResultadoEleccionDAO extends BaseDAO {
     });
   }
 
-  // Obtener resultado por eleccionId (clave alternativa)
   obtenerPorEleccionId(bd, eleccionId) {
     return bd.prepare(
       'SELECT * FROM ResultadoEleccion WHERE eleccionId = ?'
     ).get([eleccionId]);
   }
 
-  // Actualizar por eleccionId (clave alternativa)
   actualizarPorEleccionId(bd, eleccionId, datos) {
     return this.actualizar(bd, { eleccionId }, datos);
   }
 
-  // Eliminar por eleccionId (clave alternativa)
   eliminarPorEleccionId(bd, eleccionId) {
     return this.eliminar(bd, { eleccionId });
   }
 
-  // Obtener resultado completo con partidos
   obtenerResultadoCompleto(bd, eleccionId) {
     const resultado = this.obtenerPorId(bd, { eleccionId });
     if (!resultado) return null;

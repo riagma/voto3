@@ -58,6 +58,7 @@ coverage/
 
 # Base de datos
 data/
+ipfs_data/
 
 # Circuits (no subir)
 circuits/

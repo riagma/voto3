@@ -2,8 +2,12 @@ import { config } from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const ALGO_ENV = process.env.ALGO_ENV || 'localnet';
-export const NODE_ENV = process.env.NODE_ENV || 'development';
+export const ALGO_ENV = process.env.ALGO_ENV?.toLowerCase() || 'localnet';
+export const NODE_ENV = process.env.NODE_ENV?.toLowerCase() || 'development';
+
+export const ALGO_LOCALNET = ALGO_ENV === 'localnet';
+export const ALGO_TESTNET  = ALGO_ENV === 'testnet';
+export const ALGO_MAINNET  = ALGO_ENV === 'mainnet';
 
 export const CLAVE_MAESTRA = process.env.NODE_ENV === 'production' ?
   process.env.CLAVE_MAESTRA :

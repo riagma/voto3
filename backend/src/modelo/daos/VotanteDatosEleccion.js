@@ -17,4 +17,46 @@ export class VotanteDatosEleccionDAO extends BaseDAO {
     
     `).all({ eleccionId, compromisoIdx, max });
   }
+
+  obtenerDatosVotantesCrear(bd, { eleccionId, max = 100 }) {
+
+    return bd.prepare(`
+      
+      SELECT *
+      FROM VotanteDatosEleccion 
+      WHERE eleccionId = @eleccionId
+      AND compromisoTxId != '-'
+      AND publicInputs = '-'
+      ORDER BY compromisoIdx LIMIT @max
+    
+    `).all({ eleccionId, max });
+  }
+
+  obtenerDatosVotantesSolicitar(bd, { eleccionId, max = 100 }) {
+
+    return bd.prepare(`
+      
+      SELECT *
+      FROM VotanteDatosEleccion 
+      WHERE eleccionId = @eleccionId
+      AND publicInputs != '-'
+      AND anuladorHash = '-'
+      ORDER BY compromisoIdx LIMIT @max
+    
+    `).all({ eleccionId, max });
+  }
+
+  obtenerDatosVotantesVotar(bd, { eleccionId, max = 100 }) {
+
+    return bd.prepare(`
+      
+      SELECT *
+      FROM VotanteDatosEleccion 
+      WHERE eleccionId = @eleccionId
+      AND anuladorHash != '-'
+      AND votoTxId = '-'
+      ORDER BY compromisoIdx LIMIT @max
+    
+    `).all({ eleccionId, max });
+  }
 }

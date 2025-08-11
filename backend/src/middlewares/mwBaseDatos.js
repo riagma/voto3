@@ -9,18 +9,6 @@ export async function mwBaseDatos(peticion, respuesta, siguiente) {
     }
     peticion.bd = bd;
 
-    // Cerrar la conexión cuando la respuesta se complete
-    // respuesta.on('finish', () => {
-    //   if (bd) {
-    //     console.log('Cerrando conexión a BD');
-    //     bd.close((err) => {
-    //       if (err) {
-    //         console.error('Error al cerrar la BD:', err);
-    //       }
-    //     });
-    //   }
-    // });
-
     // console.log('Conexión a base de datos establecida');
     siguiente();
     // console.log('Middleware de base de datos ejecutado correctamente');

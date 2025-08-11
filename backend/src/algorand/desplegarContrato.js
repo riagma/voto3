@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { stringifyJSON, encodeAddress } from 'algosdk';
+import { stringifyJSON } from 'algosdk';
 
 import { CONFIG } from '../utiles/constantes.js';
 import { algorand } from './algorand.js';

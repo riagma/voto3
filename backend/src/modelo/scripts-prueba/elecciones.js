@@ -64,7 +64,6 @@ export async function cargarElecciones(bd) {
       },
     ];
 
-    // Preparar statement para mejor rendimiento
     const stmt = bd.prepare(`
       INSERT INTO Eleccion (
         nombre, descripcion,
@@ -96,17 +95,6 @@ export async function cargarElecciones(bd) {
 
     const total = bd.prepare('SELECT COUNT(*) as count FROM Eleccion').get();
     console.log(`\nTotal elecciones cargadas: ${total.count}`);
-
-    // const porEstado = bd.prepare(`
-    //   SELECT estado, COUNT(*) as count 
-    //   FROM Eleccion 
-    //   GROUP BY estado
-    // `).all();
-    
-    // console.log('\nDistribución por estado:');
-    // porEstado.forEach(({estado, count}) => {
-    //   console.log(`- ${estado}: ${count}`);
-    // });
 
   } catch (error) {
     if (bd.inTransaction) {

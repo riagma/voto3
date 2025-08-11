@@ -2,7 +2,7 @@ import { calcularSha256 } from '../utiles/utilesCrypto.js';
 import { registrarAnuladorEleccion } from '../algorand/registrarAnuladores.js';
 import { solicitarPapeletaEleccion } from '../algorand/registrarAnuladores.js';
 
-import { guardarProofEnFichero } from '../utiles/utilesArbol.js';
+// import { guardarProofEnFichero } from '../utiles/utilesArbol.js';
 
 export const controladorPapeleta = {
 
@@ -22,11 +22,11 @@ export const controladorPapeleta = {
 
       // TODO: comentar después de pruebas
       //-------------
-      console.log(cuentaAddr);
-      console.log(proofHash);
-      console.log(publicInputs);
-      const anulador_hash = BigInt(publicInputs[1]).toString();
-      await guardarProofEnFichero(proof, `proof_${anulador_hash}_rem.bin`);
+      // console.log(cuentaAddr);
+      // console.log(proofHash);
+      // console.log(publicInputs);
+      // const anulador_hash = BigInt(publicInputs[1]).toString();
+      // await guardarProofEnFichero(proof, `proof_${anulador_hash}_rem.bin`);
       //-------------
 
 

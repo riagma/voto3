@@ -2,10 +2,6 @@ import { randomBytes, createHash, webcrypto } from 'node:crypto';
 import { Buffer } from 'node:buffer';
 
 import { poseidon2Hash, poseidon2HashAsync } from "@zkpassport/poseidon2"
-// import { calcularPoseidon2Circuito } from './poseidon2.js';
-
-// import * as circomlibjs from 'circomlibjs';
-// export const poseidon = await circomlibjs.buildPoseidon();
 
 //----------------------------------------------------------------------------
 
@@ -36,34 +32,6 @@ export async function calcularPoseidon2ZkpAsync(datos) {
 
   return await poseidon2HashAsync(inputs);
 }
-
-//----------------------------------------------------------------------------
-
-// export async function calcularPoseidon2Noir(datos) {
-
-//   const inputsTmp = Array.isArray(datos) ? datos : [datos];
-
-//   for (const x of inputsTmp) {
-//     if (typeof x !== 'bigint') {
-//       throw new Error('Todos los elementos de entrada deben ser BigInt');
-//     }
-//   }
-
-//   const inputs = Array(2).fill('0');
-
-//   for (let i = 0; i < Math.min(inputsTmp.length, 2); i++) {
-    
-//     inputs[i] = bigInt2HexStr(inputsTmp[i]);
-//   }
-
-//   console.log('calcularPoseidon2Noir inputs:', inputs);
-
-//   const hashHex = await calcularPoseidon2Circuito(inputs);
-
-//   console.log('calcularPoseidon2Noir output:', hashHex);
-
-//   return hexStr2BigInt(hashHex);
-// }
 
 //----------------------------------------------------------------------------
 
@@ -203,7 +171,7 @@ function uint8ArrayToPem(uint8, type) {
 
 //----------------------------------------------------------------------------
 
-// --- 1. Generar par de claves asimétricas (RSA-OAEP) ---
+// Generar par de claves asimétricas (RSA-OAEP)
 export async function generarParClavesRSA() {
   const keyPair = await webcrypto.subtle.generateKey(
     {
@@ -226,7 +194,7 @@ export async function generarParClavesRSA() {
   return { clavePublica: pubPem, clavePrivada: privPem };
 }
 
-// --- 2. Encriptar con clave pública ---
+// Encriptar con clave pública
 export async function encriptarConClavePublica(texto, clavePublicaPem) {
   const pubKeyDer = pemToUint8Array(clavePublicaPem);
   const pubKey = await webcrypto.subtle.importKey(
@@ -241,7 +209,7 @@ export async function encriptarConClavePublica(texto, clavePublicaPem) {
   return Buffer.from(new Uint8Array(cifrado)).toString('base64');
 }
 
-// --- 3. Desencriptar con clave privada ---
+// Desencriptar con clave privada
 export async function desencriptarConClavePrivada(cifradoBase64, clavePrivadaPem) {
   const privKeyDer = pemToUint8Array(clavePrivadaPem);
   const privKey = await webcrypto.subtle.importKey(

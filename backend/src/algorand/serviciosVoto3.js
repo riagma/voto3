@@ -1,7 +1,7 @@
 import { TextEncoder } from 'node:util'
 import { microAlgos } from '@algorandfoundation/algokit-utils';
 
-import { ABIMethod, decodeAddress, stringifyJSON } from 'algosdk';
+import { ABIMethod, decodeAddress } from 'algosdk';
 import { algorand } from './algorand.js';
 import { contratoBlockchainDAO, cuentaBlockchainDAO } from '../modelo/DAOs.js'; 
 import { desencriptar } from '../utiles/utilesCrypto.js';
@@ -345,15 +345,12 @@ export async function cerrarRegistroAnuladores(bd, { contratoId }) {
 //----------------------------------------------------------------------------
 
 let contratoVoto3 = 0;
-
 let contratoAppId = null;
 let contratoSender = null;
 
 export async function establecerClienteVoto3(bd, { contratoId }) {
 
   if (contratoId !== contratoVoto3) {
-
-    contratoVoto3 = contratoId;
 
     const { appId, cuentaId } = contratoBlockchainDAO.obtenerPorId(bd, { contratoId });
     const { accSecret } = cuentaBlockchainDAO.obtenerPorId(bd, { cuentaId });
@@ -364,6 +361,7 @@ export async function establecerClienteVoto3(bd, { contratoId }) {
 
     algorand.setSigner(cuentaContrato.addr, cuentaContrato.signer);
 
+    contratoVoto3 = contratoId;
     contratoAppId = BigInt(appId);
     contratoSender = cuentaContrato.addr;
 
@@ -372,34 +370,6 @@ export async function establecerClienteVoto3(bd, { contratoId }) {
 
   return { sender: contratoSender, appId: contratoAppId }
 }
-
-// //----------------------------------------------------------------------------
-
-// export async function leerContratoBaseDatos(bd, contratoId) {
-//   try {
-//     const contrato = await daos.contratoBlockchain.obtenerPorId(bd, { contratoId });
-//     if (!contrato) {
-//       throw new Error(`No se ha encontrado el contrato con ID ${contratoId}`);
-//     }
-//     return { appId: contrato.appId, cuentaId: contrato.cuentaId };
-//   } catch (error) {
-//     throw new Error('Error obtenido datos cuenta: ' + error.message);
-//   }
-// }
-
-// //----------------------------------------------------------------------------
-
-// export async function leerCuentaBaseDatos(bd, cuentaId) {
-//   try {
-//     const cuenta = await daos.cuentaBlockchain.obtenerPorId(bd, { cuentaId });
-//     if (!cuenta) {
-//       throw new Error(`No se ha encontrado la cuenta con ID ${cuentaId}`);
-//     }
-//     return { secreto: cuenta.accSecret }
-//   } catch (error) {
-//     throw new Error('Error obtenido datos cuenta: ' + error.message);
-//   }
-// }
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

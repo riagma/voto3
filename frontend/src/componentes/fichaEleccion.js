@@ -28,9 +28,6 @@ export function fichaEleccion(contenedor, eleccion, onAccion) {
       textBoton = 'Ver detalles';
     }
 
-    // const appId = eleccion.contrato?.appId || '';
-    // const algoLink = servicioAlgorand.urlApplication(appId);
-
     const fechaInicioRegistro = formatearFechaWeb(parsearFechaHora(eleccion.fechaInicioRegistro));
     const fechaFinRegistro = formatearFechaWeb(parsearFechaHora(eleccion.fechaFinRegistro));
     const fechaInicioVotacion = formatearFechaWeb(parsearFechaHora(eleccion.fechaInicioVotacion));
@@ -55,8 +52,6 @@ export function fichaEleccion(contenedor, eleccion, onAccion) {
         </div>
       </div>
     `;
-
-    // <li><strong>Blockchain:</strong> <a href="${algoLink}" target="_blank">${appId}</a></li>
 
     // Registrar nuevos listeners
     const boton = contenedor.querySelector('.btn-accion');

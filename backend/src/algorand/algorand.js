@@ -1,12 +1,6 @@
 import { AlgorandClient } from '@algorandfoundation/algokit-utils';
 import { CONFIG } from '../utiles/constantes.js';
 
-// export const algorand =
-  // CONFIG.ALGO_ENV === 'mainnet' ? AlgorandClient.mainNet() :
-  // CONFIG.ALGO_ENV === 'testnet' ? AlgorandClient.testNet() :
-  // CONFIG.ALGO_ENV === 'localnet' ? AlgorandClient.defaultLocalNet() : null;
-
-
 const algodConfig = {
   server: CONFIG.ALGOD_SERVER,
   port: CONFIG.ALGOD_PORT,
@@ -19,7 +13,9 @@ const indexerConfig = {
   token: CONFIG.INDEXER_TOKEN,
 };
 
+console.log(`Configurando Algorand con: ${JSON.stringify(algodConfig)}`);
 export const algorand = AlgorandClient.fromConfig({ algodConfig, indexerConfig });
+console.log(`Algorand configurado: ${CONFIG.ALGO_ENV}`);
 
 async function printNetworkInfo() {
   const network = await algorand.client.network();
@@ -30,7 +26,7 @@ async function printNetworkInfo() {
   console.log(`Genesis Hash: ${network.genesisHash}`);
 }
 
-printNetworkInfo();
+await printNetworkInfo();
 
 if (!algorand) {
   throw new Error(`Entorno de Algorand no configurado correctamente: ${CONFIG.ALGO_ENV}`);

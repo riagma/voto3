@@ -106,7 +106,7 @@ export const controladorVotante = {
 
   async obtenerDetalleEleccion(peticion, respuesta) {
     try {
-      const detalleEleccion = await serviciosElecciones.obtenerDetalle(
+      const detalleEleccion = serviciosElecciones.obtenerDetalle(
         peticion.bd,
         peticion.params.idEleccion,
         peticion.votante.dni

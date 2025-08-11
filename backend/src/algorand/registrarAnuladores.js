@@ -92,9 +92,7 @@ export async function registrarAnuladorEleccion(bd, { eleccionId, destinatario, 
     }
 
     console.log(`Verificando ${proofHash}\n`, publicInputs);
-
     const pruebaVerificada = await honk.verifyProof({ proof, publicInputs });
-
     console.log(`Prueba verificada: ${pruebaVerificada}`);
 
     if (!pruebaVerificada) {

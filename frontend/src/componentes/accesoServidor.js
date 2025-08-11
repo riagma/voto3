@@ -171,18 +171,3 @@ export async function notificarAccesoIdentificado({
     });
   });
 }
-
-/**
- * Envuelve una llamada al servidor Voto3 para notificar acceso primero.
- * @param {Object} opciones - Opciones del modal
- * @param {string} opciones.titulo - Título del modal
- * @param {string} opciones.disclaimer - Texto explicativo bajo el título
- * @param {Function} peticion - async function({dni,contrasena}, ...args)
- * @returns {Function} async wrapper(...args)
- */
-export function wrapAccesoIdentificado(opciones, peticion) {
-  return async function (...args) {
-    const credenciales = await notificarAccesoIdentificado(opciones);
-    return peticion(credenciales, ...args);
-  }
-}

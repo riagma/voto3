@@ -38,8 +38,8 @@ export async function cargarFicheroMerkle11(ficheroMerkle11) {
     honkGlobal = new UltraHonkBackend(merkle11Json.bytecode, { threads: 8 });
     ficheroMerkle11Cargado = ficheroMerkle11;
     console.log(`Fichero Merkle11 cargado: ${ficheroMerkle11}`);
-  } else {
-    console.log(`Fichero Merkle11 ya cargado: ${ficheroMerkle11}`);
+  // } else {
+  //   console.log(`Fichero Merkle11 ya cargado: ${ficheroMerkle11}`);
   }
   return { noir: noirGlobal, honk: honkGlobal };
 }

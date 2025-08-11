@@ -1,4 +1,3 @@
-// src/deployer/deployContract.js
 import { contratoBlockchainDAO, pruebaZKDAO, raizZKDAO } from '../modelo/DAOs.js';
 
 import {

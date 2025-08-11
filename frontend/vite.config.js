@@ -1,37 +1,4 @@
 import { defineConfig } from 'vite';
-// import { nodePolyfills } from 'vite-plugin-node-polyfills';
-
-
-// export default defineConfig({
-//   plugins: [
-//     nodePolyfills({
-//       include: ['buffer', 'process'],
-//       globals: {
-//         Buffer: true,
-//         process: true
-//       }
-//     }),
-//   ],
-//   optimizeDeps: {
-//     exclude: [
-//       '@noir-lang/noirc_abi',
-//       '@noir-lang/acvm_js',
-//       'main.worker.js'
-//     ]
-//   },
-//   server: {
-//     proxy: {
-//       '/api': 'http://localhost:3000'
-//     }
-//   },
-//   rollupOptions: {
-//     input: 'index.html',
-//     output: {
-//       dir: 'dist',
-//       format: 'esm'
-//     }
-//   }
-// });
 
 export default defineConfig({
   root: '.',
@@ -46,15 +13,34 @@ export default defineConfig({
     emptyOutDir: true, // Vaciar el directorio de salida
     sourcemap: true,
     target: 'esnext',
+    chunkSizeWarningLimit: 1000, // Aumentar límite de advertencia
     rollupOptions: {
       input: {
         main: './index.html'
       },
       output: {
-        manualChunks: {
-          // Divide las dependencias grandes en chunks separados
-          algosdk: ['algosdk'],
-          barretenberg: ['@aztec/bb.js'],
+        manualChunks: (id) => {
+          // Separar las librerías pesadas en chunks individuales
+          if (id.includes('algosdk')) {
+            return 'algosdk';
+          }
+          if (id.includes('@aztec/bb.js')) {
+            return 'barretenberg-core';
+          }
+          if (id.includes('@noir-lang/noir_js')) {
+            return 'noir';
+          }
+          if (id.includes('bootstrap')) {
+            return 'bootstrap';
+          }
+          // Mantener las WASM en chunks separados
+          if (id.includes('.wasm')) {
+            return 'wasm-files';
+          }
+          // Agrupar utilidades comunes
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
       },
     },

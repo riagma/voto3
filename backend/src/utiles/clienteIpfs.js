@@ -4,11 +4,6 @@ import path from 'path';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
-/**
- * Sube un archivo al backend IPFS
- * @param {string} rutaArchivo - Ruta completa del archivo
- * @returns {Promise<string>} - CID del archivo subido
- */
 export async function subirArchivoRemoto(rutaArchivo) {
   try {
     const response = await fetch(`${BACKEND_URL}/api/ipfs/subir`, {
@@ -38,12 +33,6 @@ export async function subirArchivoRemoto(rutaArchivo) {
   }
 }
 
-/**
- * Descarga un archivo de IPFS y muestra su contenido
- * @param {string} cid - CID del archivo
- * @param {boolean} mostrarContenido - Si mostrar el contenido por consola (default: true)
- * @returns {Promise<Uint8Array>} - Contenido del archivo
- */
 export async function descargarArchivoRemoto(cid, mostrarContenido = true) {
   try {
     const response = await fetch(`${BACKEND_URL}/api/ipfs/descargar`, {
@@ -156,7 +145,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log(`Subiendo archivo: ${argumento}`);
       const cid = await subirArchivoRemoto(path.resolve(argumento));
       
-      console.log('\n✅ Archivo subido exitosamente');
+      console.log('\nArchivo subido exitosamente');
       console.log(`CID: ${cid}`);
       
     } else if (comando === 'descargar') {
@@ -176,11 +165,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log(`Descargando archivo con CID: ${argumento}`);
       await descargarArchivoRemoto(argumento);
       
-      console.log('\n✅ Archivo descargado exitosamente');
+      console.log('\nArchivo descargado exitosamente');
     }
 
   } catch (error) {
-    console.error('\n❌ Error:', error.message);
+    console.error('\nError:', error.message);
     process.exit(1);
   }
 }

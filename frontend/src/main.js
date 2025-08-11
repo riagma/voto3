@@ -1,7 +1,3 @@
-// import { Buffer } from 'buffer';
-// window.Buffer = Buffer;
-// global.Buffer = Buffer; 
-
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
@@ -11,8 +7,6 @@ import { crearMarco } from './componentes/marco.js';
 import { obtenerVista } from './rutas/enrutado.js';
 
 import { configurarAlgorand } from './servicios/servicioAlgorand.js';
-
-// import { testCircuito } from './utiles/utilesZK.js';
 
 //--------------
 let contenedorMarco = null; 
@@ -171,33 +165,5 @@ function obtenerConfiguracionExplorador(serverBase) {
   };
 }
 
-
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-
-// const observer = new MutationObserver((mutationsList) => {
-
-//   for (const mutation of mutationsList) {
-
-//     if (mutation.type === 'childList') {
-
-//       const padreContenedorActual = contenedorMarco.parentNode;
-
-//       if (!contenedorMarco.isConnected) {
-
-//         console.group('El contenedor principal ha sido removido o reemplazado');
-//         console.trace();
-//         console.groupEnd();
-
-//         contenedorMarco = document.getElementById('contenedorMarco');
-//       }
-//     }
-//   }
-// });
-
-// observer.observe(document.body, {
-//   childList: true,
-//   subtree: true
-// });
-
 //------------------------------------------------------------------------------

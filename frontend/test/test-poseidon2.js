@@ -1,4 +1,4 @@
-import { poseidon2Hash, poseidon2HashAsync } from "@zkpassport/poseidon2"
+import { poseidon2Hash } from "@zkpassport/poseidon2"
 import { UltraHonkBackend } from "@aztec/bb.js";
 
 const backend = new UltraHonkBackend();

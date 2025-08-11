@@ -63,30 +63,3 @@ export async function cerrarServidor() {
   await detenerIpfs();
   process.exit(0);
 }
-
-
-// Ejemplo de cómo lo usarías en tu SPA
-// async function cargarFicheroCircuito(nombreFichero) {
-//   try {
-//     // La URL coincide con la ruta que acabas de configurar en Express
-//     const respuesta = await fetch(`/circuitos/${nombreFichero}`);
-
-//     if (!respuesta.ok) {
-//       throw new Error(`Error al cargar el fichero: ${respuesta.statusText}`);
-//     }
-
-//     // .arrayBuffer() es ideal para datos binarios (como ficheros .gz o .wasm)
-//     const datosBinarios = await respuesta.arrayBuffer();
-
-//     console.log(`Fichero '${nombreFichero}' cargado en memoria.`);
-//     // Ahora puedes usar 'datosBinarios' para tus cálculos
-//     return datosBinarios;
-
-//   } catch (error) {
-//     console.error('No se pudo cargar el fichero del circuito:', error);
-//   }
-// }
-
-// --- Uso ---
-// Llama a esta función cuando necesites el fichero
-// const miCircuito = await cargarFicheroCircuito('merkle11.json.gz');

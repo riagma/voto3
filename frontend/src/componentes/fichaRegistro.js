@@ -1,4 +1,3 @@
-// muestra o gestiona el registro del votante
 import { contexto } from '../modelo/contexto.js';
 import { servicioVotante } from '../servicios/servicioVotante.js';
 import { servicioAlgorand } from '../servicios/servicioAlgorand.js';
