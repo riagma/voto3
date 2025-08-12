@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { randomBytes } from 'node:crypto';
-import { abrirConexionBD, cerrarConexionBD } from '../modelo/BD.js';
+import { abrirConexionBD, cerrarConexionBD } from '../../modelo/BD.js';
 
 import {
   registroVotanteEleccionDAO,
@@ -12,18 +12,18 @@ import {
   pruebaZKDAO,
   raizZKDAO,
 
-} from '../modelo/DAOs.js';
+} from '../../modelo/DAOs.js';
 
 import {
   calcularPoseidon2,
   desencriptarJSON,
-  encriptarConClavePublica } from '../utiles/utilesCrypto.js';
+  encriptarConClavePublica } from '../../utiles/utilesCrypto.js';
 
 import { 
   calcularBloqueIndice, 
-  calcularPruebaDatosPublicos } from '../utiles/utilesArbol.js';
+  calcularPruebaDatosPublicos } from '../../utiles/utilesArbol.js';
 
-import { CLAVE_PRUEBAS } from '../utiles/constantes.js';
+import { CLAVE_PRUEBAS } from '../../utiles/constantes.js';
 
 //----------------------------------------------------------------------------
 

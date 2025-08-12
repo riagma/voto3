@@ -139,7 +139,7 @@ export async function registrarAnuladorEleccion(bd, { eleccionId, destinatario, 
 
 export async function solicitarPapeletaEleccion(bd, { eleccionId, anulador }) {
 
-  console.log(`Enviando papeleta ${anulador} para ${eleccionId}`);
+  console.log(`Solicitando papeleta ${anulador} para ${eleccionId}`);
 
   //-------------
 
@@ -150,11 +150,12 @@ export async function solicitarPapeletaEleccion(bd, { eleccionId, anulador }) {
   }
 
   if (registroAnulador.papeletaTxId !== 'TEMPORAL') {
-    throw new Error(
-      "El destinatario " + destinatario +
+    console.log(
+      "El destinatario " + registroAnulador.destinatario +
       " ya recibió " + registroAnulador.papeletaTxId +
       " una papeleta para la elección " + eleccionId
     );
+    return { txId: registroAnulador.papeletaTxId, cont: 0n };
   }
 
   try {

@@ -25,8 +25,7 @@ export class VotanteDatosEleccionDAO extends BaseDAO {
       SELECT *
       FROM VotanteDatosEleccion 
       WHERE eleccionId = @eleccionId
-      AND compromisoTxId != '-'
-      AND publicInputs = '-'
+      AND compromisoTxId = '-'
       ORDER BY compromisoIdx LIMIT @max
     
     `).all({ eleccionId, max });
@@ -39,7 +38,7 @@ export class VotanteDatosEleccionDAO extends BaseDAO {
       SELECT *
       FROM VotanteDatosEleccion 
       WHERE eleccionId = @eleccionId
-      AND publicInputs != '-'
+      AND compromisoTxId != '-'
       AND anuladorHash = '-'
       ORDER BY compromisoIdx LIMIT @max
     

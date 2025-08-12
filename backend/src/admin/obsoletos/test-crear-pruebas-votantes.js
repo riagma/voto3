@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { abrirConexionBD, cerrarConexionBD } from '../modelo/BD.js';
+import { abrirConexionBD, cerrarConexionBD } from '../../modelo/BD.js';
 
 import {
   votanteDatosEleccionDAO,
@@ -9,11 +9,11 @@ import {
   pruebaZKDAO,
   raizZKDAO,
 
-} from '../modelo/DAOs.js';
+} from '../../modelo/DAOs.js';
 
-import { calcularBloqueIndice, calcularPruebaDatosPublicos } from '../utiles/utilesArbol.js';
+import { calcularBloqueIndice, calcularPruebaDatosPublicos } from '../../utiles/utilesArbol.js';
 
-import { ALGO_ENV } from '../utiles/constantes.js';
+import { ALGO_ENV } from '../../utiles/constantes.js';
 
 const TAM_LOTE = ALGO_ENV === 'localnet' ? 100 : 10;
 

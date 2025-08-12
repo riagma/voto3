@@ -31,34 +31,6 @@ if (!eleccionId) {
 
 //----------------------------------------------------------------------------
 
-let partidos = null
-let pesos = []
-
-function elegirPartido(bd, eleccionId) {
-
-  if (!partidos) {
-    partidos = partidoDAO.obtenerPorEleccion(bd, eleccionId);
-    let sumaPesos = 0;
-    for (const partido of partidos) {
-      const peso = Math.random();
-      pesos.push(peso);
-      sumaPesos += peso;
-    }
-    pesos = pesos.map(peso => peso / sumaPesos);
-  }
-
-  const r = Math.random();
-
-  let acumulado = 0;
-  for (let i = 0; i < partidos.length; i++) {
-    acumulado += pesos[i];
-    if (r < acumulado) return partidos[i];
-  }
-  return partidos[partidos.length - 1];
-}
-
-//----------------------------------------------------------------------------
-
 // async function tieneSaldo(cuentaAddr) {
 //   const accountInfo = await algorand.account.getInformation(cuentaAddr);
 //   console.log('AccountInfo:', accountInfo);
@@ -113,17 +85,9 @@ async function obtenerAxferCuenta(cuentaAddr) {
 
 //----------------------------------------------------------------------------
 
-async function destruirCuenta(cuentaAddr, mnemonico, appAddr, assetId) {
+async function destruirCuenta(accountInfo, cuentaAddr, mnemonico, appAddr, assetId) {
 
   console.log(`Destruyendo cuenta ${cuentaAddr} con appAddr ${appAddr} para assetId ${assetId}`);
-
-  const accountInfo = await algorand.account.getInformation(cuentaAddr);
-  console.log('AccountInfo:', accountInfo);
-
-  if (accountInfo.amount < 1000n) {
-    console.log(`Cuenta ${cuentaAddr} tiene saldo insuficiente para destruir.`);
-    return;
-  }
 
   const cuenta = algorand.account.fromMnemonic(mnemonico);
 
@@ -154,7 +118,7 @@ async function destruirCuenta(cuentaAddr, mnemonico, appAddr, assetId) {
       }
     );
 
-    console.log('AssetTransfer:', assetTransfer);
+    // console.log('AssetTransfer:', assetTransfer);
   }
 
   console.log(`Cerrando cuenta ${cuentaAddr} con appAddr ${appAddr}`);
@@ -175,35 +139,7 @@ async function destruirCuenta(cuentaAddr, mnemonico, appAddr, assetId) {
     }
   );
 
-  console.log('Payment:', payment);
-}
-
-//----------------------------------------------------------------------------
-
-async function votar(mnemonico, appAddr, assetId, voto) {
-
-  const cuenta = algorand.account.fromMnemonic(mnemonico);
-
-  const resultadoTransfer = await algorand.send.assetTransfer(
-    {
-      sender: cuenta.addr,
-      assetId: BigInt(assetId),
-      amount: 1n,
-      receiver: appAddr,
-      signer: cuenta.signer,
-      note: toNote(voto),
-    },
-    {
-      skipWaiting: false,
-      skipSimulate: true,
-      maxRoundsToWaitForConfirmation: 12,
-      maxFee: (2000).microAlgos(),
-    }
-  );
-
-  // console.log(resultadoTransfer);
-
-  return resultadoTransfer
+  // console.log('Payment:', payment);
 }
 
 //----------------------------------------------------------------------------
@@ -224,86 +160,73 @@ try {
 
   console.log('Datos del contrato:', contrato);
 
+  const globalState = await algorand.app.getGlobalState(BigInt(contrato.appId));
+  if (!globalState) {
+    throw new Error(`No se encontró el estado global de la aplicación con ID ${contrato.appId}`);
+  }
+
+  // console.log('Global State:', globalState);
+
+  const estadoContrato = globalState.estado_contrato ? Number(globalState.estado_contrato.value) : 0;
+  console.log(`Estado del contrato: ${estadoContrato}`);
+
+  if (estadoContrato !== 7) {
+    throw new Error(`El contrato no está en estado cerrado. Estado actual: ${estadoContrato}`);
+  }
+
   //--------------
 
   let contadorVotantes = 0;
+  let compromisoIdx = 0;
 
   const totalLabel = 'Tiempo total transcurrido';
   console.time(totalLabel);
 
   while (contadorVotantes < numeroVotantes) {
 
-    const max = Math.min(TAM_LOTE, numeroVotantes - contadorVotantes);
-
-    const datosVotantes = votanteDatosEleccionDAO.obtenerDatosVotantesVotar(bd, { eleccionId, max });
+    const datosVotantes = votanteDatosEleccionDAO.obtenerDatosVotantes(bd, { eleccionId, compromisoIdx, TAM_LOTE });
 
     if (!datosVotantes || datosVotantes.length === 0) {
       console.error(`No se encontraron más datos de votantes para la elección ${eleccionId}.`);
       break;
     }
 
-    contadorVotantes += datosVotantes.length;
-    console.log(`Votando ${datosVotantes.length} veces en la elección ${eleccionId}.`);
+    compromisoIdx += datosVotantes.length;
+    console.log(`Borrando ${datosVotantes.length} cuentas de la elección ${eleccionId}.`);
 
-    const loteLabel = `Procesados ${datosVotantes.length} votantes. Total: ${contadorVotantes}/${numeroVotantes}`;
+    const loteLabel = `Procesados ${datosVotantes.length} votantes. Total: ${compromisoIdx}`;
     console.time(loteLabel);
 
     //--------------
     console.log = function () { }; // Desactiva console.log para evitar demasiada salida
     //--------------
 
-    const datosCalculados = await Promise.all(
+    const datosVotantesProcesados = await Promise.all(
+
       datosVotantes.map(async (datosVotante) => {
 
-        if (await tienePapeleta(datosVotante.cuentaAddr, contrato.tokenId)) {
+        const accountInfo = await algorand.account.getInformation(datosVotante.cuentaAddr);
+        console.log(`Cuenta ${datosVotante.cuentaAddr} = ${accountInfo.amount}`);
 
-          console.log(`Votando ${datosVotante.votanteId} en la elección ${eleccionId}.`);
-
-          datosVotante.voto = elegirPartido(bd, datosVotante.eleccionId).siglas;
-          datosVotante.votoEnc = await encriptarConClavePublica(JSON.stringify({
-            siglas: datosVotante.voto,
-            nonce: randomBytes(16).toString('hex')
-          }), eleccion.claveVotoPublica);
-
-          const voto = { voto: datosVotante.votoEnc };
-
-          const resultadoVotar = await votar(
-            datosVotante.mnemonico,
-            contrato.appAddr,
-            contrato.tokenId, voto);
-
-          datosVotante.votoTxId = resultadoVotar.txIds[0];
-
-          await destruirCuenta(
-            datosVotante.cuentaAddr,
-            datosVotante.mnemonico,
-            contrato.appAddr,
-            contrato.tokenId);
-
-        } else {
-
-          const txAxfer = await obtenerAxferCuenta(datosVotante.cuentaAddr);
-
-          if (txAxfer) {
-
-            datosVotante.votoTxId = txAxfer.id;
-
-            await destruirCuenta(
-              datosVotante.cuentaAddr,
-              datosVotante.mnemonico,
-              contrato.appAddr,
-              contrato.tokenId);
-
-          } else {
-            console.error(`No se encontró transacción de transferencia de la papeleta para la cuenta ${datosVotante.cuentaAddr}`);
-          }
+        if (accountInfo.amount < 1000n) {
+          console.log(`Cuenta ${datosVotante.cuentaAddr} ya se ha recuperado el saldo.`);
+          return null;
         }
+
+        await destruirCuenta(
+          accountInfo,
+          datosVotante.cuentaAddr,
+          datosVotante.mnemonico,
+          contrato.appAddr,
+          contrato.tokenId);
 
         return datosVotante;
       })
     );
 
-    for (const datosVotante of datosCalculados) {
+    for (const datosVotante of datosVotantesProcesados) {
+      if (!datosVotante) continue; // Si es null, no actualizamos
+      contadorVotantes++;
       actualizarDatosVotante(bd, datosVotante);
     }
 
@@ -311,6 +234,9 @@ try {
     console.timeEnd(loteLabel);
     console.timeLog(totalLabel);
   }
+
+  console.log = consoleLog;
+  console.log(`Total de cuentas eliminadas: ${contadorVotantes}`);
 
 } catch (err) {
   console.error('Error en el test de votaciones:', err);

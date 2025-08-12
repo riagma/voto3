@@ -8,9 +8,14 @@ import {
   encriptarJSON,
   randomBigInt
 } from '../utiles/utilesCrypto.js';
-import { CLAVE_PRUEBAS } from '../utiles/constantes.js';
+import { CLAVE_PRUEBAS, ALGO_ENV } from '../utiles/constantes.js';
 
 const TAM_LOTE = ALGO_ENV === 'localnet' ? 100 : 10;
+
+const consoleLog = console.log;
+
+//--------------
+
 
 const eleccionId = process.argv[2] ? parseInt(process.argv[2]) : undefined;
 const numeroVotantes = process.argv[3] ? parseInt(process.argv[3]) : 100;
@@ -38,10 +43,10 @@ try {
       break;
     }
 
-    contadorVotantes += datosVotantes.length;
-    console.log(`Registrando ${datosVotantes.length} votantes en la elección ${eleccionId}.`);
+    contadorVotantes += votantesSinRegistro.length;
+    console.log(`Registrando ${votantesSinRegistro.length} votantes en la elección ${eleccionId}.`);
 
-    const loteLabel = `Procesados ${datosVotantes.length} votantes. Total: ${contadorVotantes}/${numeroVotantes}`;
+    const loteLabel = `Procesados ${votantesSinRegistro.length} votantes. Total: ${contadorVotantes}/${numeroVotantes}`;
     console.time(loteLabel);
 
     //--------------
@@ -49,8 +54,8 @@ try {
     //--------------
 
     const resultados = await Promise.all(
-
       votantesSinRegistro.map(async (votante) => {
+
         const votanteId = votante.dni;
 
         const { compromiso, datosPrivados, datosPublicos } = await generarDatosPrivadoPruebas();
