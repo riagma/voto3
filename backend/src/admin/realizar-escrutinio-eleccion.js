@@ -272,7 +272,7 @@ try {
 
   eleccionDAO.actualizar(bd, { id: eleccionId },
     {
-      fechaEscrutinio: Date.now().toLocaleString(),
+      // fechaEscrutinio: Date.now().toLocaleString(), OJO - No se usa este formato el frontend
       claveVotoPrivada,
     });
 

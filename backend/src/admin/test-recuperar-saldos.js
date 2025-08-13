@@ -85,7 +85,7 @@ async function obtenerAxferCuenta(cuentaAddr) {
 
 //----------------------------------------------------------------------------
 
-async function destruirCuenta(accountInfo, cuentaAddr, mnemonico, appAddr, assetId) {
+async function destruirCuenta(accountInfo, cuentaAddr, mnemonico, appAddr, assetId, creadorAddr) {
 
   console.log(`Destruyendo cuenta ${cuentaAddr} con appAddr ${appAddr} para assetId ${assetId}`);
 
@@ -127,8 +127,8 @@ async function destruirCuenta(accountInfo, cuentaAddr, mnemonico, appAddr, asset
     {
       sender: cuenta.addr,
       amount: (0).microAlgos(),
-      receiver: appAddr,
-      closeRemainderTo: appAddr,
+      receiver: creadorAddr,
+      closeRemainderTo: creadorAddr,
       signer: cuenta.signer,
       note: toNote('CIERRE DE CUENTA'),
 
@@ -159,6 +159,14 @@ try {
   }
 
   console.log('Datos del contrato:', contrato);
+
+  const cuentaCreador = cuentaBlockchainDAO.obtenerPorId(bd, { cuentaId: contrato.cuentaId });
+  if (!cuentaCreador) {
+    throw new Error(`No se encontró la cuenta que creó el contrato ${eleccionId}.`);
+  }
+
+  const creadorAddr = cuentaCreador.accAddr;
+  console.log('Cuenta creadora del contrato:', creadorAddr);
 
   const globalState = await algorand.app.getGlobalState(BigInt(contrato.appId));
   if (!globalState) {
@@ -218,7 +226,8 @@ try {
           datosVotante.cuentaAddr,
           datosVotante.mnemonico,
           contrato.appAddr,
-          contrato.tokenId);
+          contrato.tokenId,
+          creadorAddr);
 
         return datosVotante;
       })

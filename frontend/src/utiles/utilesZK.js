@@ -39,6 +39,13 @@ export async function generarPrueba(circuito, inputs) {
     
   } catch (err) {
     console.error("Error generando prueba:", err);
+    console.error("Stack trace:", err.stack);
+    
+    // Log adicional para debugging
+    if (inputs) {
+      console.error("Inputs originales que causaron el error:", JSON.stringify(inputs, null, 2));
+    }
+    
     throw err;
   }
 }

@@ -1,5 +1,5 @@
 const DB_NAME = 'Voto3';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const DB_PRESERVE = false; // true = mantener datos, false = borrar y recrear
 
 class Voto3IDB {

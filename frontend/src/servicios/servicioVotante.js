@@ -204,12 +204,13 @@ export const servicioVotante = {
         }
 
         let mnemonico = null;
+        registro.compromisoAddr = null;
         if (registro.compromisoPrivado) {
           const datosCompromiso = await desencriptarDatosCompromiso(registro.compromisoPrivado, idEleccion);
           if (datosCompromiso) {
             registro.compromisoAddr = datosCompromiso.cuentaAddr;
             mnemonico = datosCompromiso.mnemonico;
-          } else { registro.compromisoAddr = null; }
+          }
         }
 
         if (registro.compromisoIdx != null) {
@@ -244,7 +245,7 @@ export const servicioVotante = {
           }
         }
 
-        if (registro.compromisoAddr != null &&
+        if (mnemonico != null && registro.compromisoAddr != null &&
           (eleccion.estado === ESTADO_ELECCION.PASADA ||
             eleccion.estado === ESTADO_ELECCION.ACTUAL && registro.votoTxId !== null)) {
           await servicioAlgorand.destruirCuenta(

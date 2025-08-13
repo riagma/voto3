@@ -49,6 +49,11 @@ $RECYCLE.BIN/
 /backend/bd/datos/*.db
 *.db-journal
 
+# Public (ignorar index.html, assets y circuits)
+public/index.html
+public/assets/
+public/circuits/
+
 # Testing
 coverage/
 .nyc_output/
