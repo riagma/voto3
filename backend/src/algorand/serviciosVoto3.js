@@ -309,7 +309,7 @@ export async function registrarAnulador(bd, { contratoId, destinatario, anulador
     maxRoundsToWaitForConfirmation: 12,
   });
 
-  console.log(resultado);
+  // console.log(resultado);
 
   return { 
     txId: resultado.txIds[1], 
