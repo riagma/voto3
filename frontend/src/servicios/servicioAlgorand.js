@@ -1,6 +1,7 @@
 import algosdk from 'algosdk';
 import { api } from './api.js';
 import { unirUrl } from '../utiles/utilesVistas.js';
+import { desencriptarConClavePrivada } from '../utiles/utilesCrypto.js';
 
 
 //------------------------------------------------------------------------------
@@ -283,6 +284,26 @@ export const servicioAlgorand = {
 
   //----------------------------------------------------------------------------
 
+  async consultarTransaccionVoto(txIdVoto) {
+    try {
+      const txIdVotoInfo = await indexer.lookupTransactionByID(txIdVoto).do();
+      console.log("Transacción de voto encontrada:", txIdVotoInfo);
+
+      const nota = this.fromNote(txIdVotoInfo.transaction.note);
+      if (!nota || !nota.voto) {
+        console.log("La transacción no contiene un voto válido.");
+        return null;
+      }
+      console.log("Voto encontrado:", nota.voto);
+      return nota.voto;
+    } catch (error) {
+      console.error("Error al consultar la transacción de voto:", error);
+      return null;
+    }
+  },
+
+  //----------------------------------------------------------------------------
+
   async destruirCuenta(mnemonico, assetId, appAddr, accAddr) {
     try {
       const cuenta = algosdk.mnemonicToSecretKey(mnemonico);
@@ -327,7 +348,7 @@ export const servicioAlgorand = {
           assetIndex: Number(assetId),
           closeRemainderTo: appAddr, // Cerrar el asset hacia el creador
           suggestedParams: axferParams,
-          note: this.toNote('CIERRE DE CUENTA'),  
+          note: this.toNote('CIERRE DE CUENTA'),
         });
 
         const signedOptOutTxn = optOutTxn.signTxn(cuenta.sk);
@@ -340,7 +361,7 @@ export const servicioAlgorand = {
       }
 
       console.log(`Cerrando cuenta y devolviendo ALGO a ${accAddr}...`);
-      
+
       const closeParams = await algod.getTransactionParams().do();
       const closeTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender: cuenta.addr,

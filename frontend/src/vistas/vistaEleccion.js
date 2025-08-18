@@ -162,7 +162,7 @@ export function vistaEleccion(container, idEleccion) {
 
     if (eleccion.estado === ESTADO_ELECCION.FUTURA) {
       infoVisible = true;
-      presentarseVisible = contexto.estaIdentificado();
+      // presentarseVisible = contexto.estaIdentificado();
       infoActivo = true;
     }
     if (eleccion.estado === ESTADO_ELECCION.ACTUAL) {
@@ -261,7 +261,7 @@ export function vistaEleccion(container, idEleccion) {
     // — Resultados
     const paneResultados = panes.find(p => p.id === 'resultados');
     if (paneResultados) {
-      const cleanup = fichaResultados(paneResultados.contenedor, resultados);
+      const cleanup = fichaResultados(paneResultados.contenedor, resultados, idEleccion);
       componentes.add(cleanup);
     }
 

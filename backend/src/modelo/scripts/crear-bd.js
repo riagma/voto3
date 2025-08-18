@@ -31,9 +31,13 @@ async function inicializarBaseDatos() {
             .catch(() => false);
 
         if (existeBD) {
-            const sobrescribir = await preguntarUsuario(
+            await preguntarUsuario(
                 `La base de datos ya existe en: ${RUTA_BD}\n` +
-                '¿Desea sobrescribirla? (s/N): '
+                '¿Desea sobrescribirla? (s/n): '
+            );
+
+            const sobrescribir = await preguntarUsuario(
+                'Se perderán TODOS los datos actuales, ¿está seguro? (s/n): '
             );
 
             if (!sobrescribir) {
@@ -56,7 +60,7 @@ async function inicializarBaseDatos() {
         console.log(`\nInicializando base de datos en: ${RUTA_BD}`);
         bd.exec(sentenciasSQL);
         console.log('Base de datos creada exitosamente.');
-        
+
         bd.close((error) => {
             if (error) {
                 console.error('Error al cerrar la base de datos:', error.message);

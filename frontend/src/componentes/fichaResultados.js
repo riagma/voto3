@@ -1,6 +1,7 @@
 import { limpiarManejadores } from '../utiles/utilesVistas.js';
+import { servicioVotante } from '../servicios/servicioVotante.js';
 
-export function fichaResultados(contenedor, resultados) {
+export function fichaResultados(contenedor, resultados, idEleccion) {
   let manejadores = new Set();
 
   function render() {
@@ -105,9 +106,33 @@ export function fichaResultados(contenedor, resultados) {
     
     // Añadir manejador para verificar voto
     const btnVerificar = contenedor.querySelector('#btnVerificar');
-    const handler = () => {
-      alert('Funcionalidad de verificación no implementada');
-      // Aquí iría la lógica de verificación del voto
+    const handler = async () => {
+      try {
+        const siglas = await servicioVotante.comprobarVotoEmitido(idEleccion);
+        
+        // Buscar el nombre del partido por las siglas
+        const partido = resultados.partidos.find(p => p.partidoId === siglas);
+        const nombrePartido = partido ? partido.nombrePartido : siglas;
+        
+        // Crear alerta flotante de éxito
+        mostrarAlertaFlotante(
+          'success',
+          'bi-check-circle-fill',
+          'Verificación exitosa',
+          `Su voto fue emitido para <strong>${nombrePartido} (${siglas})</strong>`
+        );
+        
+      } catch (error) {
+        console.error('Error verificando el voto:', error);
+        
+        // Crear alerta flotante de error
+        mostrarAlertaFlotante(
+          'warning',
+          'bi-exclamation-triangle-fill',
+          'No se pudo verificar el voto',
+          error.message
+        );
+      }
     };
     btnVerificar.addEventListener('click', handler);
     manejadores.add([btnVerificar, 'click', handler]);
@@ -115,4 +140,112 @@ export function fichaResultados(contenedor, resultados) {
   
   render();
   return () => limpiarManejadores(manejadores);
+}
+
+// Función para mostrar alertas flotantes y responsivas
+function mostrarAlertaFlotante(tipo, icono, titulo, mensaje) {
+  // Crear el contenedor de alertas si no existe
+  let contenedorAlertas = document.getElementById('alertas-flotantes');
+  if (!contenedorAlertas) {
+    contenedorAlertas = document.createElement('div');
+    contenedorAlertas.id = 'alertas-flotantes';
+    contenedorAlertas.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1055;
+      max-width: 90vw;
+      width: 100%;
+      max-width: 400px;
+      pointer-events: none;
+    `;
+    document.body.appendChild(contenedorAlertas);
+  }
+
+  // Crear la alerta
+  const alerta = document.createElement('div');
+  alerta.className = `alert alert-${tipo} alert-dismissible fade show mb-3 shadow-sm`;
+  alerta.style.cssText = `
+    pointer-events: auto;
+    animation: slideInRight 0.3s ease-out;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  `;
+
+  alerta.innerHTML = `
+    <div class="d-flex align-items-start">
+      <i class="bi ${icono} me-2 mt-1 flex-shrink-0"></i>
+      <div class="flex-grow-1">
+        <div class="fw-bold mb-1">${titulo}</div>
+        <div>${mensaje}</div>
+      </div>
+      <button type="button" class="btn-close btn-close-white ms-2 flex-shrink-0" aria-label="Cerrar"></button>
+    </div>
+  `;
+
+  // Agregar estilos de animación si no existen
+  if (!document.getElementById('alertas-flotantes-styles')) {
+    const estilos = document.createElement('style');
+    estilos.id = 'alertas-flotantes-styles';
+    estilos.textContent = `
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+      
+      @media (max-width: 576px) {
+        #alertas-flotantes {
+          top: 10px !important;
+          right: 10px !important;
+          left: 10px !important;
+          max-width: none !important;
+          width: auto !important;
+        }
+      }
+    `;
+    document.head.appendChild(estilos);
+  }
+
+  // Agregar la alerta al contenedor
+  contenedorAlertas.appendChild(alerta);
+
+  // Función para cerrar la alerta
+  const cerrarAlerta = () => {
+    alerta.style.animation = 'slideOutRight 0.3s ease-in forwards';
+    setTimeout(() => {
+      if (alerta.parentNode) {
+        alerta.remove();
+      }
+      // Limpiar el contenedor si no hay más alertas
+      if (contenedorAlertas.children.length === 0) {
+        contenedorAlertas.remove();
+      }
+    }, 300);
+  };
+
+  // Evento para el botón de cerrar
+  const btnCerrar = alerta.querySelector('.btn-close');
+  btnCerrar.addEventListener('click', cerrarAlerta);
+
+  // Auto-cerrar después de 8 segundos
+  setTimeout(cerrarAlerta, 8000);
 }

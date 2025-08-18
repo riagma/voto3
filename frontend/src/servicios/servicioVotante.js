@@ -11,7 +11,7 @@ import { CLAVE_PRUEBAS, ESTADO_ELECCION } from '../utiles/constantes.js';
 import { formatearFechaWeb } from '../utiles/utilesFechas.js';
 import { calcularPruebaDatosPublicos } from '../utiles/utilesArbol.js';
 import { mostrarSpinnerOverlay, ocultarSpinnerOverlay } from '../componentes/SpinnerOverlay.js';
-import { encriptarConClavePublica, generarNonceHex } from '../utiles/utilesCrypto.js';
+import { encriptarConClavePublica, generarNonceHex, desencriptarConClavePrivada } from '../utiles/utilesCrypto.js';
 
 
 import {
@@ -533,6 +533,51 @@ export const servicioVotante = {
 
     } catch (error) {
       throw new Error('Error emitiendo la papeleta de voto: ' + error.message);
+
+    } finally {
+      ocultarSpinnerOverlay();
+    }
+  },
+
+  //------------------------------------------------------------------------------
+
+  async comprobarVotoEmitido(idEleccion) {
+    try {
+      mostrarSpinnerOverlay('Comprobando voto emitido, por favor espere...');
+
+      let registro = await this.cargarRegistroEleccion(idEleccion);
+      if (!registro) {
+        throw new Error('Registro no encontrado para la elección: ' + idEleccion);
+      }
+
+      if (!registro.votoTxId) {
+        throw new Error('No ha emitido el voto para la elección: ' + idEleccion);
+      }
+
+      if (!registro.claveVotoPrivada) {
+        throw new Error('No se ha registrado la clave privada de voto para la elección: ' + idEleccion);
+      }
+
+      const votoEnc = await servicioAlgorand.consultarTransaccionVoto(registro.votoTxId);
+      if (!votoEnc) {
+        throw new Error('No se pudo recuperar la transacción de voto: ' + registro.votoTxId);
+      }
+
+      // console.log(`Votos:\n${votoEnc}\n${registro.votoNota}`);
+      // console.log("Clave privada de voto:", registro.claveVotoPrivada);
+
+      const votoTexto = await desencriptarConClavePrivada(votoEnc, registro.claveVotoPrivada);
+      const voto = JSON.parse(votoTexto);
+      if (!voto || !voto.siglas) {
+        throw new Error('No se pudo desencriptar el voto de la transacción: ' + registro.votoTxId);
+      }
+
+      console.log("Voto emitido:", voto.siglas);
+
+      return voto.siglas;
+
+    } catch (error) {
+      throw new Error('Error comprobando el voto emitido: ' + error.message);
 
     } finally {
       ocultarSpinnerOverlay();
