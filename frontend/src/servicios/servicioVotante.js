@@ -310,7 +310,10 @@ export const servicioVotante = {
         throw new Error('Registro no encontrado para la elección: ' + idEleccion);
       }
 
-      const { compromiso, datosPrivados } = await generarDatosCompromiso();
+      const { compromiso, cuentaAddr, datosPrivados } = await generarDatosCompromiso();
+
+      // No se actualizaba al registrar el compromiso
+      registro.compromisoAddr = cuentaAddr;
 
       const registroCompromiso = await this.crearCompromiso(idEleccion, compromiso, datosPrivados);
       if (registroCompromiso) {
@@ -609,7 +612,7 @@ async function generarDatosCompromiso() {
   // console.log('Datos privados encriptados:', datosPrivados);
   // console.log('Datos privados desencriptados:', await desencriptarJSON(datosPrivados, servicioLogin.getClaveDerivada()));
 
-  return { compromiso, datosPrivados };
+  return { compromiso, cuentaAddr, datosPrivados };
 }
 
 //------------------------------------------------------------------------------
